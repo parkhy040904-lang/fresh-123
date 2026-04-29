@@ -53,41 +53,78 @@ body, .main, .block-container { background: #d9f0db !important; padding: 0 !impo
 .sec-title { font-size: 14px; font-weight: 800; color: #1a1a1a; margin-bottom: 12px;
     display: flex; align-items: center; gap: 6px; }
 
-/* 카메라 박스 */
-.cam-box {
-    background: linear-gradient(145deg, #1a1a2e, #0f3460);
-    border-radius: 22px; height: 180px; position: relative; overflow: hidden;
-    box-shadow: 0 8px 24px rgba(15,52,96,0.4); margin-bottom: 10px;
+/* ── 카메라 버튼 = 카메라 박스 ── */
+div:has(.cam-trigger) + div button {
+    background: linear-gradient(145deg, #1a1a2e, #0f3460) !important;
+    color: white !important;
+    border-radius: 22px !important;
+    border: 3px solid transparent !important;
+    outline: 2px solid #4caf50 !important;
+    outline-offset: -14px !important;
+    min-height: 180px !important;
+    width: 100% !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    white-space: pre-line !important;
+    line-height: 1.9 !important;
+    box-shadow: 0 8px 24px rgba(15,52,96,0.4) !important;
+    letter-spacing: 0.01em !important;
 }
-.corner { position: absolute; width: 26px; height: 26px; border-color: #4caf50; border-style: solid; border-width: 0; }
-.corner.tl { top:14px; left:14px; border-top-width:3px; border-left-width:3px; border-radius:4px 0 0 0; }
-.corner.tr { top:14px; right:14px; border-top-width:3px; border-right-width:3px; border-radius:0 4px 0 0; }
-.corner.bl { bottom:14px; left:14px; border-bottom-width:3px; border-left-width:3px; border-radius:0 0 0 4px; }
-.corner.br { bottom:14px; right:14px; border-bottom-width:3px; border-right-width:3px; border-radius:0 0 4px 0; }
-.sline {
-    position: absolute; width: 70%; height: 2px; left: 15%;
-    background: linear-gradient(90deg, transparent, #4caf50, transparent);
-    box-shadow: 0 0 8px #4caf50; animation: sm 2s ease-in-out infinite;
+div:has(.cam-trigger) + div button:hover {
+    background: linear-gradient(145deg, #232340, #1a4a80) !important;
 }
-@keyframes sm { 0%{top:18px;opacity:0;} 15%{opacity:1;} 85%{opacity:1;} 100%{top:162px;opacity:0;} }
-.cam-inner { position: absolute; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; }
-.cam-inner .big-icon { font-size: 44px; margin-bottom: 8px; }
-.cam-inner .lbl { color: #fff; font-size: 14px; font-weight: 700; }
-.cam-inner .sub { color: rgba(255,255,255,0.45); font-size: 11px; margin-top: 3px; }
 
-/* 업로드 카드 */
-.up-card {
-    background: #fff; border: 2px dashed #a5d6a7; border-radius: 18px;
-    padding: 15px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+/* ── 업로드 버튼 = 갤러리 카드 ── */
+div:has(.upload-trigger) + div button {
+    background: white !important;
+    color: #2d7a3a !important;
+    border: 2px dashed #a5d6a7 !important;
+    border-radius: 18px !important;
+    min-height: unset !important;
+    padding: 15px 16px !important;
+    width: 100% !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    white-space: pre-line !important;
+    line-height: 1.7 !important;
+    box-shadow: none !important;
+    text-align: left !important;
 }
-.up-icon { width: 44px; height: 44px; background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-    border-radius: 13px; display: flex; align-items: center; justify-content: center;
-    font-size: 22px; flex-shrink: 0; }
-.up-t { font-size: 14px; font-weight: 800; color: #2d7a3a; }
-.up-s { font-size: 11px; color: #999; margin-top: 2px; font-weight: 600; }
+div:has(.upload-trigger) + div button:hover {
+    background: #f1f8f1 !important;
+    border-color: #4caf50 !important;
+}
 
-/* 결과 박스 */
+/* ── 분석 버튼 ── */
+div:has(.analyze-trigger) + div button {
+    background: linear-gradient(135deg, #2d7a3a, #4caf50) !important;
+    color: white !important;
+    border-radius: 16px !important;
+    border: none !important;
+    padding: 0.85rem !important;
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+    width: 100% !important;
+    min-height: unset !important;
+    box-shadow: 0 4px 14px rgba(76,175,80,0.35) !important;
+}
+
+/* ── 가이드 토글 버튼 ── */
+.stButton > button {
+    background: #f0f4f0 !important;
+    color: #555 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 5px 10px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    width: 100% !important;
+    min-height: unset !important;
+    box-shadow: none !important;
+}
+.stButton > button:hover { background: #e0ece0 !important; color: #2d7a3a !important; }
+
+/* ── 결과 박스 ── */
 .rbox { background: #fff; border-radius: 20px; padding: 18px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.07); margin-top: 14px; }
 .rhead { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
@@ -104,7 +141,7 @@ body, .main, .block-container { background: #d9f0db !important; padding: 0 !impo
 .tip { background: #f5fbf5; border-radius: 12px; padding: 10px 12px;
     font-size: 12px; color: #444; font-weight: 600; line-height: 1.65; }
 
-/* 가이드 카드 */
+/* ── 가이드 카드 ── */
 .gc { background: #fff; border-radius: 18px; padding: 16px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
 .gemo { font-size: 30px; margin-bottom: 5px; }
@@ -114,38 +151,6 @@ body, .main, .block-container { background: #d9f0db !important; padding: 0 !impo
     margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
 .gdetail .ok { color: #2d7a3a; font-weight: 800; display: block; margin-bottom: 2px; }
 .gdetail .no { color: #c62828; font-weight: 800; display: block; margin-top: 8px; margin-bottom: 2px; }
-
-/* 카메라 버튼 */
-div:has(.camera-btn-wrap) + div button {
-    background: linear-gradient(145deg, #1a1a2e, #0f3460) !important;
-    color: white !important; border-radius: 14px !important; border: none !important;
-    padding: 0.8rem !important; font-size: 0.95rem !important; font-weight: 700 !important;
-    width: 100% !important; min-height: unset !important; box-shadow: none !important;
-}
-/* 업로드 버튼 */
-div:has(.upload-btn-wrap) + div button {
-    background: white !important; color: #2d7a3a !important;
-    border: 2px dashed #a5d6a7 !important; border-radius: 18px !important;
-    padding: 0.8rem !important; font-size: 0.95rem !important; font-weight: 800 !important;
-    width: 100% !important; min-height: unset !important; box-shadow: none !important;
-}
-/* 분석 버튼 */
-div:has(.analyze-btn-wrap) + div button {
-    background: linear-gradient(135deg, #2d7a3a, #4caf50) !important;
-    color: white !important; border-radius: 16px !important; border: none !important;
-    padding: 0.85rem !important; font-size: 1rem !important; font-weight: 800 !important;
-    width: 100% !important; min-height: unset !important;
-    box-shadow: 0 4px 14px rgba(76,175,80,0.35) !important;
-}
-/* 가이드 토글 버튼 */
-.stButton > button {
-    background: #f0f4f0 !important; color: #555 !important;
-    border: none !important; border-radius: 8px !important;
-    padding: 5px 10px !important; font-size: 0.75rem !important; font-weight: 700 !important;
-    width: 100% !important; min-height: unset !important;
-    box-shadow: none !important; margin-top: 4px !important;
-}
-.stButton > button:hover { background: #e0ece0 !important; color: #2d7a3a !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -172,25 +177,10 @@ st.markdown("""
 st.markdown('<div class="scroll-body">', unsafe_allow_html=True)
 
 # ── 카메라 섹션 ──
-st.markdown("""
-<div class="sec">
-  <div class="sec-title">📷 카메라 스캔</div>
-  <div class="cam-box">
-    <div class="corner tl"></div><div class="corner tr"></div>
-    <div class="corner bl"></div><div class="corner br"></div>
-    <div class="sline"></div>
-    <div class="cam-inner">
-      <div class="big-icon">📸</div>
-      <div class="lbl">카메라로 스캔하기</div>
-      <div class="sub">아래 버튼을 눌러 카메라 시작</div>
-    </div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown('<div style="padding:0 18px 0;">', unsafe_allow_html=True)
-st.markdown('<div class="camera-btn-wrap"></div>', unsafe_allow_html=True)
-if st.button("📷  카메라 열기", key="cam_btn", use_container_width=True):
+st.markdown('<div class="sec"><div class="sec-title">📷 카메라 스캔</div></div>', unsafe_allow_html=True)
+st.markdown('<div style="padding:0 18px;">', unsafe_allow_html=True)
+st.markdown('<div class="cam-trigger"></div>', unsafe_allow_html=True)
+if st.button("📸\n카메라로 스캔하기\n탭하여 카메라 시작", key="cam_btn", use_container_width=True):
     st.session_state.show_camera = not st.session_state.show_camera
     st.session_state.show_upload = False
 st.markdown('</div>', unsafe_allow_html=True)
@@ -200,23 +190,10 @@ if st.session_state.show_camera:
     camera_photo = st.camera_input("촬영", label_visibility="collapsed")
 
 # ── 업로드 섹션 ──
-st.markdown("""
-<div class="sec">
-  <div class="sec-title">🖼️ 사진 업로드</div>
-  <div class="up-card">
-    <div class="up-icon">📁</div>
-    <div>
-      <div class="up-t">갤러리에서 선택</div>
-      <div class="up-s">JPG · PNG 이미지 업로드</div>
-    </div>
-    <span style="color:#ccc;font-size:20px;margin-left:auto">›</span>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown('<div style="padding:0 18px 0;">', unsafe_allow_html=True)
-st.markdown('<div class="upload-btn-wrap"></div>', unsafe_allow_html=True)
-if st.button("📁  갤러리 열기", key="upload_btn", use_container_width=True):
+st.markdown('<div class="sec"><div class="sec-title">🖼️ 사진 업로드</div></div>', unsafe_allow_html=True)
+st.markdown('<div style="padding:0 18px;">', unsafe_allow_html=True)
+st.markdown('<div class="upload-trigger"></div>', unsafe_allow_html=True)
+if st.button("📁  갤러리에서 선택\nJPG · PNG 이미지 업로드", key="upload_btn", use_container_width=True):
     st.session_state.show_upload = not st.session_state.show_upload
     st.session_state.show_camera = False
 st.markdown('</div>', unsafe_allow_html=True)
@@ -225,7 +202,7 @@ uploaded_file = None
 if st.session_state.show_upload:
     uploaded_file = st.file_uploader("이미지 선택", type=["jpg","jpeg","png"], label_visibility="collapsed")
 
-# ── 이미지 표시 ──
+# ── 이미지 처리 ──
 image = None
 image_bytes = None
 if camera_photo:
@@ -242,7 +219,7 @@ if image:
 
 # ── 분석 버튼 ──
 st.markdown('<div style="padding:10px 18px 0;">', unsafe_allow_html=True)
-st.markdown('<div class="analyze-btn-wrap"></div>', unsafe_allow_html=True)
+st.markdown('<div class="analyze-trigger"></div>', unsafe_allow_html=True)
 analyze = st.button("🔍 신선도 분석하기", use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -262,7 +239,6 @@ if analyze:
             )
             result = response.choices[0].message.content
 
-            # 결과 파싱
             data = {}
             for line in result.strip().split('\n'):
                 if ':' in line:
@@ -320,11 +296,7 @@ if st.session_state.result_html:
     st.markdown(st.session_state.result_html, unsafe_allow_html=True)
 
 # ── 가이드 섹션 ──
-st.markdown("""
-<div class="sec" style="padding-bottom:8px;">
-  <div class="sec-title">📗 농작물 고르는 가이드</div>
-</div>
-""", unsafe_allow_html=True)
+st.markdown('<div class="sec" style="padding-bottom:8px;"><div class="sec-title">📗 농작물 고르는 가이드</div></div>', unsafe_allow_html=True)
 
 guides = [
     ("🍉", "수박",  ["두드렸을 때 탁한 소리", "줄무늬 선명하고 윤기", "배꼽 작고 건조", "묵직한 무게"], ["두드렸을 때 맑은 소리", "꼭지 없거나 시든 것"]),

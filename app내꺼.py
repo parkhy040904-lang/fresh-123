@@ -455,24 +455,26 @@ async function analyze(src) {
       });
       if (!res.ok) throw new Error('API 오류: ' + res.status);
       const json = await res.json();
-      const text = json.choices[0].message.content;
-      const data = {};
-      text.trim().split('\\n').forEach(line => {
-        const idx = line.indexOf(':');
-        if (idx > -1) data[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
-      });
-      const produce      = data['농산물 종류'] || '농산물';
-      const colorRaw     = data['색상 점수'] || '5';
-      const textureRaw   = data['외관 점수'] || '5';
-      const scoreRaw     = data['종합 신선도 점수'] || '5';
-      const status       = data['상태'] || '보통';
-      const desc         = data['상태 설명'] || '';
-      const storage      = data['보관 방법'] || '';
-      const shelf        = data['예상 남은 기한'] || '';
-      const parseScore = r => { const m = r.match(/([\\d.]+)/); return m ? parseFloat(m[1]).toFixed(1) : '5.0'; };
-      const colorScore   = parseScore(colorRaw);
-      const textureScore = parseScore(textureRaw);
-      const score        = parseScore(scoreRaw);
+      const raw = json.choices[0].message.content.replace(/\*+/g, '').replace(/#+/g, '');
+      const lines = raw.split('\\n');
+      const get = (...keywords) => {
+        for (const line of lines) {
+          const ci = line.indexOf(':');
+          if (ci === -1) continue;
+          const k = line.slice(0, ci).trim();
+          if (keywords.some(kw => k.includes(kw))) return line.slice(ci + 1).trim();
+        }
+        return '';
+      };
+      const parseScore = r => { const m = (r||'').match(/([\\d.]+)/); return m ? parseFloat(m[1]).toFixed(1) : '5.0'; };
+      const produce      = get('농산물','종류','채소','작물','식품') || '농산물';
+      const colorScore   = parseScore(get('색상'));
+      const textureScore = parseScore(get('외관','질감','탄력'));
+      const score        = parseScore(get('종합','신선도 점수'));
+      const status       = get('상태') || '보통';
+      const desc         = get('설명') || '';
+      const storage      = get('보관','저장') || '';
+      const shelf        = get('기한','유통','남은') || '';
       showResult(produce, score, colorScore, textureScore, status, desc, storage, shelf);
     } catch(err) {
       document.getElementById('remo').textContent = '❌';

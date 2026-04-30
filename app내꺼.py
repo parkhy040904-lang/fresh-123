@@ -452,33 +452,42 @@ async function analyze(src) {
             role: 'user',
             content: [
               {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + base64}},
-              {type: 'text', text: '이 농산물 사진을 보고 신선도를 엄격하게 평가하세요. 아래 기준을 반드시 따르세요:\\n\\n[채점 기준]\\n9~10점: 완벽히 신선, 결점 없음\\n7~8점: 대부분 신선, 작은 흠집만 있음\\n5~6점: 신선도 저하, 일부 변색·흠집\\n3~4점: 곰팡이·검은 반점·물러짐 일부 보임\\n1~2점: 심한 부패, 곰팡이 광범위, 섭취 불가\\n\\n주의: 곰팡이, 검은 반점, 물러진 부분이 보이면 반드시 3점 이하로 채점하세요.\\n\\n반드시 아래 형식으로만 답하세요:\\n\\n농산물 종류:\\n색상 점수: (0.0~10.0)\\n외관 점수: (0.0~10.0)\\n종합 신선도 점수: (0.0~10.0)\\n상태: (신선/보통/주의/부패 중 하나)\\n상태 설명:\\n보관 방법:\\n예상 남은 기한: '}
+              {type: 'text', text: '농산물 신선도를 아래 엄격한 기준으로 평가하세요.\\n\\n규칙1: 곰팡이, 검은 반점, 물러짐, 부패 흔적이 조금이라도 보이면 종합 신선도 점수는 반드시 3.0 이하입니다.\\n규칙2: 전체적으로 상한 경우 1.0~2.0점입니다.\\n규칙3: 상태가 좋아야만 7점 이상을 줄 수 있습니다.\\n\\n아래 형식으로만 답하세요. 다른 말은 하지 마세요:\\n농산물 종류: (이름)\\n색상 점수: (0.0~10.0)\\n외관 점수: (0.0~10.0)\\n종합 신선도 점수: (0.0~10.0)\\n상태: (신선/보통/주의/부패)\\n상태 설명: (한 문장)\\n보관 방법: (구체적으로)\\n예상 남은 기한: (기간)'}
             ]
           }]
         })
       });
       if (!res.ok) throw new Error('API 오류: ' + res.status);
       const json = await res.json();
-      const raw = json.choices[0].message.content.replace(/\*+/g, '').replace(/#+/g, '');
-      const lines = raw.split('\\n');
-      const get = (...keywords) => {
-        for (const line of lines) {
-          const ci = line.indexOf(':');
-          if (ci === -1) continue;
-          const k = line.slice(0, ci).trim();
-          if (keywords.some(kw => k.includes(kw))) return line.slice(ci + 1).trim();
-        }
-        return '';
-      };
+      const raw = json.choices[0].message.content.replace(/\*+/g, '').replace(/#+/g, '').trim();
+      const sectionKeys = [
+        {key:'농산물 종류', kws:['농산물','종류','채소','작물','식품']},
+        {key:'색상 점수',   kws:['색상']},
+        {key:'외관 점수',   kws:['외관','질감']},
+        {key:'종합 신선도 점수', kws:['종합','신선도 점수']},
+        {key:'상태',        kws:['상태']},
+        {key:'상태 설명',   kws:['설명']},
+        {key:'보관 방법',   kws:['보관','저장']},
+        {key:'예상 남은 기한', kws:['기한','유통','남은']},
+      ];
+      const sections = {}; let curSec = null;
+      for (const line of raw.split('\\n')) {
+        const ci = line.indexOf(':');
+        const k  = ci > -1 ? line.slice(0, ci).trim() : '';
+        const v  = ci > -1 ? line.slice(ci + 1).trim() : line.trim();
+        const matched = sectionKeys.find(s => s.kws.some(kw => k.includes(kw)) && k.length < 20);
+        if (matched) { curSec = matched.key; sections[curSec] = v; }
+        else if (curSec && line.trim()) sections[curSec] += ' ' + line.trim();
+      }
       const parseScore = r => { const m = (r||'').match(/([\\d.]+)/); return m ? parseFloat(m[1]).toFixed(1) : '5.0'; };
-      const produce      = get('농산물','종류','채소','작물','식품') || '농산물';
-      const colorScore   = parseScore(get('색상'));
-      const textureScore = parseScore(get('외관','질감','탄력'));
-      const score        = parseScore(get('종합','신선도 점수'));
-      const status       = get('상태') || '보통';
-      const desc         = get('설명') || '';
-      const storage      = get('보관','저장') || '';
-      const shelf        = get('기한','유통','남은') || '';
+      const produce      = sections['농산물 종류'] || '농산물';
+      const colorScore   = parseScore(sections['색상 점수']);
+      const textureScore = parseScore(sections['외관 점수']);
+      const score        = parseScore(sections['종합 신선도 점수']);
+      const status       = sections['상태'] || '보통';
+      const desc         = sections['상태 설명'] || '';
+      const storage      = sections['보관 방법'] || '';
+      const shelf        = sections['예상 남은 기한'] || '';
       showResult(produce, score, colorScore, textureScore, status, desc, storage, shelf);
     } catch(err) {
       document.getElementById('remo').textContent = '❌';

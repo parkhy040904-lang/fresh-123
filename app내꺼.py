@@ -502,37 +502,37 @@ async function fetchRecipe() {
         model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         messages: [{
           role: 'user',
-          content: produce + '를 주재료로 한 실제로 존재하는 간단한 레시피 하나를 알려주세요. 반드시 아래 형식으로만 답하세요:\\n\\n레시피명:\\n조리 시간:\\n재료:\\n조리법:'
+          content: produce + '를 주재료로 한 간단한 레시피를 아래 형식 그대로 답하세요. 다른 말은 절대 하지 마세요.\\n요리이름: 여기에 요리 이름\\n조리시간: 여기에 시간\\n재료: 재료1, 재료2, 재료3\\n조리법: 1. 첫번째 2. 두번째 3. 세번째'
         }]
       })
     });
-    if (!res.ok) throw new Error('오류 ' + res.status);
+    if (!res.ok) throw new Error('API ' + res.status);
     const json = await res.json();
-    const text = json.choices[0].message.content.replace(/\*+/g, '').replace(/#+/g, '');
-    const data = {};
-    const extract = (label, next) => {
-      const pattern = label + '\\s*[:：]\\s*([\\s\\S]+?)' + (next ? '(?=' + next + ')' : '$');
-      const r = new RegExp(pattern, 'i');
-      const m = text.match(r);
-      return m ? m[1].trim() : '';
+    const raw = json.choices[0].message.content;
+    const get = (key) => {
+      const lines = raw.split('\\n');
+      for (let l of lines) {
+        const ci = l.indexOf(':');
+        if (ci > -1 && l.slice(0, ci).trim() === key) return l.slice(ci + 1).trim();
+      }
+      return '';
     };
-    data['레시피명'] = extract('레시피명', '조리.?시간|재료|조리법');
-    data['조리 시간'] = extract('조리.?시간', '재료|조리법');
-    data['재료'] = extract('재료', '조리법');
-    data['조리법'] = extract('조리법', null);
-    const recipeName = data['레시피명'] || '레시피';
+    const name  = get('요리이름') || get('레시피명') || produce + ' 레시피';
+    const time  = get('조리시간') || get('조리 시간') || '—';
+    const ingr  = get('재료') || '';
+    const steps = get('조리법') || '';
     rbox2.innerHTML =
-      '<div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:14px;padding:14px 14px 10px;margin-bottom:14px;">' +
+      '<div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:14px;padding:14px;margin-bottom:14px;">' +
         '<div style="font-size:11px;color:#2d7a3a;font-weight:800;margin-bottom:4px;">🍳 추천 레시피</div>' +
-        '<div style="font-size:17px;font-weight:900;color:#1b5e20;">' + recipeName + '</div>' +
-        '<div style="font-size:11px;color:#888;font-weight:600;margin-top:3px;">⏱ ' + (data['조리 시간'] || '—') + '</div>' +
+        '<div style="font-size:17px;font-weight:900;color:#1b5e20;">' + name + '</div>' +
+        '<div style="font-size:11px;color:#888;font-weight:600;margin-top:3px;">⏱ ' + time + '</div>' +
       '</div>' +
       '<div class="recipe-sec">🛒 재료</div>' +
-      '<div class="recipe-body">' + (data['재료'] || '').replace(/\\n/g, '<br>') + '</div>' +
+      '<div class="recipe-body">' + ingr.split(',').map(s => s.trim()).filter(Boolean).join('<br>') + '</div>' +
       '<div class="recipe-sec">🍽️ 조리법</div>' +
-      '<div class="recipe-body">' + (data['조리법'] || '').replace(/\\n/g, '<br>') + '</div>';
+      '<div class="recipe-body">' + steps.replace(/(\d+\.)/g, '<br>$1').replace(/^<br>/, '') + '</div>';
   } catch(err) {
-    rbox2.innerHTML = '<div style="text-align:center;padding:20px;color:#e53935;font-size:13px;font-weight:700;">레시피를 불러오지 못했어요 😢</div>';
+    rbox2.innerHTML = '<div style="text-align:center;padding:20px;color:#e53935;font-size:13px;font-weight:700;">오류: ' + err.message + '</div>';
   }
 }
 </script>

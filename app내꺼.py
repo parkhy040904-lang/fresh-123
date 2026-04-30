@@ -115,6 +115,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .tag{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:800;}
 .tag.g{background:#e8f5e9;color:#2e7d32;}
 .tag.y{background:#fff8e1;color:#e65100;}
+.tag.o{background:#fff3e0;color:#bf360c;}
 .tag.r{background:#fce4ec;color:#b71c1c;}
 .tip{background:#f5fbf5;border-radius:12px;padding:10px 12px;
   font-size:12px;color:#444;font-weight:600;line-height:1.65;}
@@ -378,7 +379,7 @@ function imgToBase64(imgEl) {
 
 function scoreColor(s) {
   const n = parseFloat(s);
-  return n >= 7 ? '#43a047' : n >= 4 ? '#fb8c00' : '#e53935';
+  return n >= 8 ? '#43a047' : n >= 5 ? '#fb8c00' : n >= 3 ? '#ff6f00' : '#e53935';
 }
 
 function showLoading() {
@@ -398,13 +399,16 @@ function showLoading() {
 
 function showResult(produce, score, colorScore, textureScore, status, desc, storage, shelf) {
   const scorePct = Math.min(parseFloat(score) * 10, 100);
-  let tagCls, emoji, color;
-  if (status.includes('신선')) {
-    tagCls = 'g'; emoji = '🏆'; color = '#43a047';
-  } else if (status.includes('보통')) {
-    tagCls = 'y'; emoji = '👍'; color = '#fb8c00';
+  let tagCls, emoji, color, statusLabel;
+  const s = parseFloat(score);
+  if (s >= 8) {
+    tagCls = 'g'; emoji = '🏆'; color = '#43a047'; statusLabel = '신선';
+  } else if (s >= 5) {
+    tagCls = 'y'; emoji = '👍'; color = '#fb8c00'; statusLabel = '보통';
+  } else if (s >= 3) {
+    tagCls = 'o'; emoji = '⚠️'; color = '#ff6f00'; statusLabel = '주의';
   } else {
-    tagCls = 'r'; emoji = '⚠️'; color = '#e53935';
+    tagCls = 'r'; emoji = '🚨'; color = '#e53935'; statusLabel = '경고';
   }
   document.getElementById('remo').textContent = emoji;
   document.getElementById('rname').textContent = produce;
@@ -418,7 +422,7 @@ function showResult(produce, score, colorScore, textureScore, status, desc, stor
     '<div class="score-item"><div class="score-label">👁 외관</div><div class="score-val" style="color:' + scoreColor(textureScore) + '">' + textureScore + '</div></div>' +
     '<div class="score-item"><div class="score-label">⭐ 종합</div><div class="score-val" style="color:' + color + '">' + score + '</div></div>';
   document.getElementById('rtags').innerHTML =
-    '<span class="tag ' + tagCls + '">' + status + '</span>' +
+    '<span class="tag ' + tagCls + '">' + statusLabel + '</span>' +
     '<span class="tag" style="background:#f3f3f3;color:#666">AI 분석</span>' +
     '<span class="tag" style="background:#f3f3f3;color:#666">' + score + '/10점</span>';
   document.getElementById('rtip').innerHTML =

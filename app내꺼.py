@@ -73,10 +73,11 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .cam-placeholder .sub{color:rgba(255,255,255,0.45);font-size:11px;margin-top:3px;}
 #camBtns{position:absolute;bottom:12px;left:0;right:0;
   display:none;justify-content:center;gap:10px;z-index:10;}
-.cbtn{padding:8px 20px;border-radius:20px;border:none;cursor:pointer;
+.cbtn{padding:8px 16px;border-radius:20px;border:none;cursor:pointer;
   font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;}
 .cbtn.shoot{background:#4caf50;color:#fff;}
 .cbtn.stop{background:rgba(255,255,255,0.15);color:#fff;}
+.cbtn.flip{background:rgba(255,255,255,0.25);color:#fff;}
 
 #camResult{display:none;margin-top:12px;}
 #camResult img{width:100%;border-radius:18px;max-height:180px;object-fit:cover;
@@ -185,6 +186,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
         </div>
         <div id="camBtns">
           <button class="cbtn stop" onclick="stopCam(event)">✕ 취소</button>
+          <button class="cbtn flip" onclick="flipCam(event)">🔄 전환</button>
           <button class="cbtn shoot" onclick="shoot(event)">📸 촬영</button>
         </div>
       </div>
@@ -311,6 +313,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 <script>
 const GROQ_API_KEY = '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';
 let stream = null;
+let facingMode = 'environment';
 
 function updateClock() {
   const now = new Date();
@@ -321,9 +324,11 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-async function startCam() {
+async function startCam(mode) {
+  if (mode) facingMode = mode;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode},audio:false});
     const v = document.getElementById('camVideo');
     v.srcObject = stream;
     v.style.display = 'block';
@@ -333,6 +338,11 @@ async function startCam() {
   } catch(e) {
     alert('카메라 권한을 허용해주세요.\\n(HTTPS 또는 localhost 환경 필요)');
   }
+}
+
+function flipCam(e) {
+  e.stopPropagation();
+  startCam(facingMode === 'environment' ? 'user' : 'environment');
 }
 
 function stopCam(e) {
@@ -461,7 +471,7 @@ async function analyze(src) {
       const json = await res.json();
       const raw = json.choices[0].message.content
         .replace(/\*+/g, '').replace(/#+/g, '').replace(/\$/g, '')
-        .replace(/`+/g, '').replace(/_{2,}/g, '').replace(/\\[a-zA-Z]+/g, '')
+        .replace(/`+/g, '').replace(/_{2,}/g, '').replace(/\\\\[a-zA-Z]+/g, '')
         .trim();
       const sectionKeys = [
         {key:'농산물 종류', kws:['농산물','종류','채소','작물','식품']},
@@ -526,7 +536,10 @@ async function fetchRecipe() {
     });
     if (!res.ok) throw new Error('API ' + res.status);
     const json = await res.json();
-    const raw = json.choices[0].message.content;
+    const raw = json.choices[0].message.content
+      .replace(/\*+/g, '').replace(/#+/g, '').replace(/\$/g, '')
+      .replace(/`+/g, '').replace(/_{2,}/g, '')
+      .trim();
     const topKeys = ['요리이름','레시피명','조리시간','조리 시간','재료','조리법'];
     const sections = {};
     let curKey = null;
@@ -556,7 +569,8 @@ async function fetchRecipe() {
       '<div class="recipe-sec">🛒 재료</div>' +
       '<div class="recipe-body">' + ingrHtml + '</div>' +
       '<div class="recipe-sec">🍽️ 조리법</div>' +
-      '<div class="recipe-body">' + stepsHtml + '</div>';
+      '<div class="recipe-body">' + stepsHtml + '</div>' +
+      '<button onclick="fetchRecipe()" style="width:100%;margin-top:14px;padding:10px;background:#f0f4f0;border:none;border-radius:12px;font-size:13px;font-weight:800;color:#2d7a3a;cursor:pointer;font-family:Nunito,sans-serif;">🔄 다른 레시피 보기</button>';
   } catch(err) {
     rbox2.innerHTML = '<div style="text-align:center;padding:20px;color:#e53935;font-size:13px;font-weight:700;">오류: ' + err.message + '</div>';
   }

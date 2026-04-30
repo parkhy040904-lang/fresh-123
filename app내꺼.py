@@ -511,7 +511,8 @@ async function fetchRecipe() {
     const text = json.choices[0].message.content.replace(/\*+/g, '').replace(/#+/g, '');
     const data = {};
     const extract = (label, next) => {
-      const r = new RegExp(label + '\\s*[:：]\\s*([\\s\\S]+?)(?=' + (next || '$'), 'i');
+      const pattern = label + '\\s*[:：]\\s*([\\s\\S]+?)' + (next ? '(?=' + next + ')' : '$');
+      const r = new RegExp(pattern, 'i');
       const m = text.match(r);
       return m ? m[1].trim() : '';
     };

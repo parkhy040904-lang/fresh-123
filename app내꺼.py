@@ -124,10 +124,10 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .score-label{font-size:9px;color:#aaa;font-weight:700;letter-spacing:0.02em;}
 .score-val{font-size:20px;font-weight:900;margin-top:2px;}
 .recipe-btn{width:100%;margin-top:10px;padding:11px;
-  background:linear-gradient(135deg,#e65100,#ff8f00);
+  background:linear-gradient(135deg,#2d7a3a,#4caf50);
   border:none;border-radius:14px;color:#fff;
   font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;
-  cursor:pointer;box-shadow:0 4px 14px rgba(230,81,0,0.28);transition:transform 0.15s;display:none;}
+  cursor:pointer;box-shadow:0 4px 14px rgba(76,175,80,0.35);transition:transform 0.15s;display:none;}
 .recipe-btn:active{transform:scale(0.97);}
 .rbox2{background:#fff;border-radius:20px;padding:18px;
   box-shadow:0 4px 16px rgba(0,0,0,0.07);margin-top:10px;display:none;}
@@ -289,7 +289,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
         </div>
 
         <div class="gc" onclick="this.classList.toggle('open')">
-          <div class="gemo">🌿</div><div class="gname">무</div>
+          <div class="gemo">🫜</div><div class="gname">무</div>
           <div class="gsub">탭해서 보기</div>
           <div class="gdetail">
             <span class="ok">✔ 좋은 것</span><br>
@@ -516,11 +516,12 @@ async function fetchRecipe() {
       if (matched) { curKey = matched; data[curKey] = line.slice(matched.length + 1).trim(); }
       else if (curKey && line.trim()) { data[curKey] += '\\n' + line.trim(); }
     });
+    const recipeName = data['레시피명'] || '레시피';
     rbox2.innerHTML =
-      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">' +
-        '<span style="font-size:28px;">🍳</span>' +
-        '<div><div class="recipe-name">' + (data['레시피명'] || '레시피') + '</div>' +
-        '<div class="recipe-time">⏱ ' + (data['조리 시간'] || '—') + '</div></div>' +
+      '<div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:14px;padding:14px 14px 10px;margin-bottom:14px;">' +
+        '<div style="font-size:11px;color:#2d7a3a;font-weight:800;margin-bottom:4px;">🍳 추천 레시피</div>' +
+        '<div style="font-size:17px;font-weight:900;color:#1b5e20;">' + recipeName + '</div>' +
+        '<div style="font-size:11px;color:#888;font-weight:600;margin-top:3px;">⏱ ' + (data['조리 시간'] || '—') + '</div>' +
       '</div>' +
       '<div class="recipe-sec">🛒 재료</div>' +
       '<div class="recipe-body">' + (data['재료'] || '').replace(/\\n/g, '<br>') + '</div>' +

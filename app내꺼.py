@@ -422,4 +422,116 @@ function showResult(produce, score, colorScore, textureScore, status, desc, stor
     '<span class="tag" style="background:#f3f3f3;color:#666">AI 분석</span>' +
     '<span class="tag" style="background:#f3f3f3;color:#666">' + score + '/10점</span>';
   document.getElementById('rtip').innerHTML =
-    '
+    '💡 ' + (desc || '분석이 완료됐어요!') + '<br><br>' +
+    '🏪 <b>보관법:</b> ' + (storage || '—') + '<br>' +
+    '⏰ <b>남은 기한:</b> ' + (shelf || '—');
+  document.getElementById('recipeBtn').style.display = 'block';
+  document.getElementById('rbox').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+async function analyze(src) {
+  const imgEl = document.getElementById(src === 'cam' ? 'camImg' : 'uploadImg');
+  if (!imgEl.src || imgEl.src === '') { alert('이미지가 없어요!'); return; }
+  const run = async () => {
+    showLoading();
+    try {
+      const base64 = imgToBase64(imgEl);
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + GROQ_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          messages: [{
+            role: 'user',
+            content: [
+              {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + base64}},
+              {type: 'text', text: '이 농산물 사진을 보고 아래 항목을 분석해주세요. 반드시 아래 형식으로만 답하세요:\\n\\n농산물 종류:\\n색상 점수: (0.0~10.0 소수점 포함)\\n외관 점수: (0.0~10.0 소수점 포함)\\n종합 신선도 점수: (0.0~10.0 소수점 포함, 색상·외관·탄력·냄새 종합)\\n상태: (신선/보통/주의/부패 중 하나)\\n상태 설명:\\n보관 방법:\\n예상 남은 기한: '}
+            ]
+          }]
+        })
+      });
+      if (!res.ok) throw new Error('API 오류: ' + res.status);
+      const json = await res.json();
+      const text = json.choices[0].message.content;
+      const data = {};
+      text.trim().split('\\n').forEach(line => {
+        const idx = line.indexOf(':');
+        if (idx > -1) data[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+      });
+      const produce      = data['농산물 종류'] || '농산물';
+      const colorRaw     = data['색상 점수'] || '5';
+      const textureRaw   = data['외관 점수'] || '5';
+      const scoreRaw     = data['종합 신선도 점수'] || '5';
+      const status       = data['상태'] || '보통';
+      const desc         = data['상태 설명'] || '';
+      const storage      = data['보관 방법'] || '';
+      const shelf        = data['예상 남은 기한'] || '';
+      const parseScore = r => { const m = r.match(/([\\d.]+)/); return m ? parseFloat(m[1]).toFixed(1) : '5.0'; };
+      const colorScore   = parseScore(colorRaw);
+      const textureScore = parseScore(textureRaw);
+      const score        = parseScore(scoreRaw);
+      showResult(produce, score, colorScore, textureScore, status, desc, storage, shelf);
+    } catch(err) {
+      document.getElementById('remo').textContent = '❌';
+      document.getElementById('rname').textContent = '분석 실패';
+      document.getElementById('rscore').textContent = err.message;
+      document.getElementById('rtip').textContent = '다시 시도해주세요.';
+    }
+  };
+  if (imgEl.complete && imgEl.naturalWidth > 0) run();
+  else { imgEl.onload = run; }
+}
+
+async function fetchRecipe() {
+  const produce = document.getElementById('rname').textContent;
+  const rbox2 = document.getElementById('rbox2');
+  rbox2.style.display = 'block';
+  rbox2.innerHTML = '<div style="text-align:center;padding:24px;color:#aaa;font-size:13px;font-weight:700;">🍳 레시피 불러오는 중...</div>';
+  rbox2.scrollIntoView({behavior:'smooth', block:'nearest'});
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + GROQ_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages: [{
+          role: 'user',
+          content: produce + '를 주재료로 한 실제로 존재하는 간단한 레시피 하나를 알려주세요. 반드시 아래 형식으로만 답하세요:\\n\\n레시피명:\\n조리 시간:\\n재료:\\n조리법:'
+        }]
+      })
+    });
+    if (!res.ok) throw new Error('오류 ' + res.status);
+    const json = await res.json();
+    const lines = json.choices[0].message.content.trim().split('\\n');
+    const data = {}; let curKey = null;
+    const keys = ['레시피명', '조리 시간', '재료', '조리법'];
+    lines.forEach(line => {
+      const matched = keys.find(k => line.startsWith(k + ':'));
+      if (matched) { curKey = matched; data[curKey] = line.slice(matched.length + 1).trim(); }
+      else if (curKey && line.trim()) { data[curKey] += '\\n' + line.trim(); }
+    });
+    rbox2.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">' +
+        '<span style="font-size:28px;">🍳</span>' +
+        '<div><div class="recipe-name">' + (data['레시피명'] || '레시피') + '</div>' +
+        '<div class="recipe-time">⏱ ' + (data['조리 시간'] || '—') + '</div></div>' +
+      '</div>' +
+      '<div class="recipe-sec">🛒 재료</div>' +
+      '<div class="recipe-body">' + (data['재료'] || '').replace(/\\n/g, '<br>') + '</div>' +
+      '<div class="recipe-sec">🍽️ 조리법</div>' +
+      '<div class="recipe-body">' + (data['조리법'] || '').replace(/\\n/g, '<br>') + '</div>';
+  } catch(err) {
+    rbox2.innerHTML = '<div style="text-align:center;padding:20px;color:#e53935;font-size:13px;font-weight:700;">레시피를 불러오지 못했어요 😢</div>';
+  }
+}
+</script>
+</body>
+</html>"""
+
+components.html(html, height=920, scrolling=False)

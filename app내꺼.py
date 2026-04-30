@@ -509,18 +509,26 @@ async function fetchRecipe() {
     if (!res.ok) throw new Error('API ' + res.status);
     const json = await res.json();
     const raw = json.choices[0].message.content;
-    const get = (key) => {
-      const lines = raw.split('\\n');
-      for (let l of lines) {
-        const ci = l.indexOf(':');
-        if (ci > -1 && l.slice(0, ci).trim() === key) return l.slice(ci + 1).trim();
+    const topKeys = ['요리이름','레시피명','조리시간','조리 시간','재료','조리법'];
+    const sections = {};
+    let curKey = null;
+    raw.split('\\n').forEach(line => {
+      const ci = line.indexOf(':');
+      const maybeKey = ci > -1 ? line.slice(0, ci).trim() : '';
+      const matched = topKeys.find(k => maybeKey === k);
+      if (matched) {
+        curKey = matched;
+        sections[curKey] = line.slice(ci + 1).trim();
+      } else if (curKey && line.trim()) {
+        sections[curKey] += '\\n' + line.trim();
       }
-      return '';
-    };
-    const name  = get('요리이름') || get('레시피명') || produce + ' 레시피';
-    const time  = get('조리시간') || get('조리 시간') || '—';
-    const ingr  = get('재료') || '';
-    const steps = get('조리법') || '';
+    });
+    const name  = sections['요리이름'] || sections['레시피명'] || produce + ' 레시피';
+    const time  = sections['조리시간'] || sections['조리 시간'] || '—';
+    const ingr  = sections['재료'] || '';
+    const steps = sections['조리법'] || '';
+    const ingrHtml  = ingr.split(/[,\\n]/).map(s => s.trim()).filter(Boolean).map(s => '• ' + s).join('<br>');
+    const stepsHtml = steps.split('\\n').map(s => s.trim()).filter(Boolean).join('<br>');
     rbox2.innerHTML =
       '<div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:14px;padding:14px;margin-bottom:14px;">' +
         '<div style="font-size:11px;color:#2d7a3a;font-weight:800;margin-bottom:4px;">🍳 추천 레시피</div>' +
@@ -528,9 +536,9 @@ async function fetchRecipe() {
         '<div style="font-size:11px;color:#888;font-weight:600;margin-top:3px;">⏱ ' + time + '</div>' +
       '</div>' +
       '<div class="recipe-sec">🛒 재료</div>' +
-      '<div class="recipe-body">' + ingr.split(',').map(s => s.trim()).filter(Boolean).join('<br>') + '</div>' +
+      '<div class="recipe-body">' + ingrHtml + '</div>' +
       '<div class="recipe-sec">🍽️ 조리법</div>' +
-      '<div class="recipe-body">' + steps.replace(/(\d+\.)/g, '<br>$1').replace(/^<br>/, '') + '</div>';
+      '<div class="recipe-body">' + stepsHtml + '</div>';
   } catch(err) {
     rbox2.innerHTML = '<div style="text-align:center;padding:20px;color:#e53935;font-size:13px;font-weight:700;">오류: ' + err.message + '</div>';
   }

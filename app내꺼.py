@@ -400,11 +400,11 @@ function showResult(produce, score, colorScore, textureScore, status, desc, stor
   const scorePct = Math.min(parseFloat(score) * 10, 100);
   let tagCls, emoji, color;
   if (status.includes('신선')) {
-    tagCls = 'g'; emoji = '🥬'; color = '#43a047';
+    tagCls = 'g'; emoji = '🏆'; color = '#43a047';
   } else if (status.includes('보통')) {
-    tagCls = 'y'; emoji = '⚠️'; color = '#fb8c00';
+    tagCls = 'y'; emoji = '👍'; color = '#fb8c00';
   } else {
-    tagCls = 'r'; emoji = '🚨'; color = '#e53935';
+    tagCls = 'r'; emoji = '⚠️'; color = '#e53935';
   }
   document.getElementById('remo').textContent = emoji;
   document.getElementById('rname').textContent = produce;

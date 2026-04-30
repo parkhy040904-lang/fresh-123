@@ -508,14 +508,17 @@ async function fetchRecipe() {
     });
     if (!res.ok) throw new Error('오류 ' + res.status);
     const json = await res.json();
-    const lines = json.choices[0].message.content.trim().split('\\n');
-    const data = {}; let curKey = null;
-    const keys = ['레시피명', '조리 시간', '재료', '조리법'];
-    lines.forEach(line => {
-      const matched = keys.find(k => line.startsWith(k + ':'));
-      if (matched) { curKey = matched; data[curKey] = line.slice(matched.length + 1).trim(); }
-      else if (curKey && line.trim()) { data[curKey] += '\\n' + line.trim(); }
-    });
+    const text = json.choices[0].message.content.replace(/\*+/g, '').replace(/#+/g, '');
+    const data = {};
+    const extract = (label, next) => {
+      const r = new RegExp(label + '\\s*[:：]\\s*([\\s\\S]+?)(?=' + (next || '$'), 'i');
+      const m = text.match(r);
+      return m ? m[1].trim() : '';
+    };
+    data['레시피명'] = extract('레시피명', '조리.?시간|재료|조리법');
+    data['조리 시간'] = extract('조리.?시간', '재료|조리법');
+    data['재료'] = extract('재료', '조리법');
+    data['조리법'] = extract('조리법', null);
     const recipeName = data['레시피명'] || '레시피';
     rbox2.innerHTML =
       '<div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:14px;padding:14px 14px 10px;margin-bottom:14px;">' +

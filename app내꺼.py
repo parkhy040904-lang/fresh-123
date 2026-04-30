@@ -119,6 +119,23 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .tip{background:#f5fbf5;border-radius:12px;padding:10px 12px;
   font-size:12px;color:#444;font-weight:600;line-height:1.65;}
 
+.score-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:10px 0 6px;}
+.score-item{background:#f7f7f7;border-radius:12px;padding:9px 6px;text-align:center;}
+.score-label{font-size:9px;color:#aaa;font-weight:700;letter-spacing:0.02em;}
+.score-val{font-size:20px;font-weight:900;margin-top:2px;}
+.recipe-btn{width:100%;margin-top:10px;padding:11px;
+  background:linear-gradient(135deg,#e65100,#ff8f00);
+  border:none;border-radius:14px;color:#fff;
+  font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;
+  cursor:pointer;box-shadow:0 4px 14px rgba(230,81,0,0.28);transition:transform 0.15s;display:none;}
+.recipe-btn:active{transform:scale(0.97);}
+.rbox2{background:#fff;border-radius:20px;padding:18px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.07);margin-top:10px;display:none;}
+.recipe-name{font-size:15px;font-weight:900;color:#111;}
+.recipe-time{font-size:11px;color:#aaa;font-weight:600;margin-top:2px;}
+.recipe-sec{font-size:11px;font-weight:800;color:#e65100;margin-top:12px;margin-bottom:5px;}
+.recipe-body{font-size:12px;color:#444;font-weight:600;line-height:1.75;}
+
 .ggrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .gc{background:#fff;border-radius:18px;padding:16px;
   box-shadow:0 2px 10px rgba(0,0,0,0.06);cursor:pointer;transition:transform 0.15s;}
@@ -138,7 +155,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 
   <div class="sbar">
     <div class="notch"></div>
-    <span style="padding-left:6px">9:41</span>
+    <span style="padding-left:6px" id="clock">9:41</span>
     <span>●●● WiFi 🔋</span>
   </div>
 
@@ -204,9 +221,12 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
           </div>
         </div>
         <div class="bwrap"><div class="bfill" id="bfill" style="width:0%"></div></div>
+        <div class="score-grid" id="scoreGrid"></div>
         <div class="tags" id="rtags"></div>
         <div class="tip" id="rtip"></div>
+        <button class="recipe-btn" id="recipeBtn" onclick="fetchRecipe()">🍳 이 재료로 만드는 레시피 보기</button>
       </div>
+      <div class="rbox2" id="rbox2"></div>
     </div>
 
     <div class="sec" style="padding-bottom:24px">
@@ -269,7 +289,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
         </div>
 
         <div class="gc" onclick="this.classList.toggle('open')">
-          <div class="gemo">🥕</div><div class="gname">무</div>
+          <div class="gemo">🌿</div><div class="gname">무</div>
           <div class="gsub">탭해서 보기</div>
           <div class="gdetail">
             <span class="ok">✔ 좋은 것</span><br>
@@ -282,7 +302,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
       </div>
     </div>
 
-    <div style="text-align:center;color:#aaa;font-size:0.78rem;padding:1.5rem 0;">Scan Eat! © 2024</div>
+    <div style="text-align:center;color:#aaa;font-size:0.78rem;padding:1.5rem 0;">Scan Eat! © 2026</div>
 
   </div>
 </div>
@@ -290,6 +310,15 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 <script>
 const GROQ_API_KEY = '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';
 let stream = null;
+
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('clock').textContent = h + ':' + m;
+}
+updateClock();
+setInterval(updateClock, 1000);
 
 async function startCam() {
   try {
@@ -347,6 +376,11 @@ function imgToBase64(imgEl) {
   return c.toDataURL('image/jpeg').split(',')[1];
 }
 
+function scoreColor(s) {
+  const n = parseFloat(s);
+  return n >= 7 ? '#43a047' : n >= 4 ? '#fb8c00' : '#e53935';
+}
+
 function showLoading() {
   const rbox = document.getElementById('rbox');
   rbox.style.display = 'block';
@@ -354,13 +388,16 @@ function showLoading() {
   document.getElementById('rname').textContent = 'AI 분석 중...';
   document.getElementById('rscore').textContent = '잠시만 기다려주세요';
   document.getElementById('bfill').style.width = '0%';
+  document.getElementById('scoreGrid').innerHTML = '';
   document.getElementById('rtags').innerHTML = '';
   document.getElementById('rtip').textContent = 'AI가 사진을 분석하고 있어요 🤖';
+  document.getElementById('recipeBtn').style.display = 'none';
+  document.getElementById('rbox2').style.display = 'none';
   rbox.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-function showResult(produce, score, status, desc, storage, shelf) {
-  const scorePct = Math.min(score * 10, 100);
+function showResult(produce, score, colorScore, textureScore, status, desc, storage, shelf) {
+  const scorePct = Math.min(parseFloat(score) * 10, 100);
   let tagCls, emoji, color;
   if (status.includes('신선')) {
     tagCls = 'g'; emoji = '🥬'; color = '#43a047';
@@ -371,75 +408,18 @@ function showResult(produce, score, status, desc, storage, shelf) {
   }
   document.getElementById('remo').textContent = emoji;
   document.getElementById('rname').textContent = produce;
-  document.getElementById('rscore').textContent = '신선도 ' + score + '/10점';
+  document.getElementById('rscore').textContent = '종합 신선도 ' + score + '/10';
   const bar = document.getElementById('bfill');
   bar.style.width = '0%';
   bar.style.background = 'linear-gradient(90deg,' + color + '88,' + color + ')';
   setTimeout(() => { bar.style.width = scorePct + '%'; }, 50);
+  document.getElementById('scoreGrid').innerHTML =
+    '<div class="score-item"><div class="score-label">🎨 색상</div><div class="score-val" style="color:' + scoreColor(colorScore) + '">' + colorScore + '</div></div>' +
+    '<div class="score-item"><div class="score-label">👁 외관</div><div class="score-val" style="color:' + scoreColor(textureScore) + '">' + textureScore + '</div></div>' +
+    '<div class="score-item"><div class="score-label">⭐ 종합</div><div class="score-val" style="color:' + color + '">' + score + '</div></div>';
   document.getElementById('rtags').innerHTML =
     '<span class="tag ' + tagCls + '">' + status + '</span>' +
     '<span class="tag" style="background:#f3f3f3;color:#666">AI 분석</span>' +
     '<span class="tag" style="background:#f3f3f3;color:#666">' + score + '/10점</span>';
   document.getElementById('rtip').innerHTML =
-    '💡 ' + (desc || '분석이 완료됐어요!') + '<br><br>' +
-    '🏪 <b>보관법:</b> ' + (storage || '—') + '<br>' +
-    '⏰ <b>남은 기한:</b> ' + (shelf || '—');
-  document.getElementById('rbox').scrollIntoView({behavior:'smooth', block:'nearest'});
-}
-
-async function analyze(src) {
-  const imgEl = document.getElementById(src === 'cam' ? 'camImg' : 'uploadImg');
-  if (!imgEl.src || imgEl.src === '') { alert('이미지가 없어요!'); return; }
-  const run = async () => {
-    showLoading();
-    try {
-      const base64 = imgToBase64(imgEl);
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + GROQ_API_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-          messages: [{
-            role: 'user',
-            content: [
-              {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + base64}},
-              {type: 'text', text: '이 농산물 사진을 보고 아래 항목을 분석해주세요. 반드시 아래 형식으로만 답하세요:\\n\\n농산물 종류:\\n신선도 점수: (숫자/10)\\n상태: (신선/보통/주의/부패 중 하나)\\n상태 설명:\\n보관 방법:\\n예상 남은 기한: '}
-            ]
-          }]
-        })
-      });
-      if (!res.ok) throw new Error('API 오류: ' + res.status);
-      const json = await res.json();
-      const text = json.choices[0].message.content;
-      const data = {};
-      text.trim().split('\\n').forEach(line => {
-        const idx = line.indexOf(':');
-        if (idx > -1) data[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
-      });
-      const produce  = data['농산물 종류'] || '농산물';
-      const scoreRaw = data['신선도 점수'] || '5';
-      const status   = data['상태'] || '보통';
-      const desc     = data['상태 설명'] || '';
-      const storage  = data['보관 방법'] || '';
-      const shelf    = data['예상 남은 기한'] || '';
-      const m = scoreRaw.match(/(\\d+)/);
-      const score = m ? parseInt(m[1]) : 5;
-      showResult(produce, score, status, desc, storage, shelf);
-    } catch(err) {
-      document.getElementById('remo').textContent = '❌';
-      document.getElementById('rname').textContent = '분석 실패';
-      document.getElementById('rscore').textContent = err.message;
-      document.getElementById('rtip').textContent = '다시 시도해주세요.';
-    }
-  };
-  if (imgEl.complete && imgEl.naturalWidth > 0) run();
-  else { imgEl.onload = run; }
-}
-</script>
-</body>
-</html>"""
-
-components.html(html, height=920, scrolling=False)
+    '

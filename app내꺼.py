@@ -459,14 +459,17 @@ async function analyze(src) {
       });
       if (!res.ok) throw new Error('API 오류: ' + res.status);
       const json = await res.json();
-      const raw = json.choices[0].message.content.replace(/\*+/g, '').replace(/#+/g, '').trim();
+      const raw = json.choices[0].message.content
+        .replace(/\*+/g, '').replace(/#+/g, '').replace(/\$/g, '')
+        .replace(/`+/g, '').replace(/_{2,}/g, '').replace(/\\[a-zA-Z]+/g, '')
+        .trim();
       const sectionKeys = [
         {key:'농산물 종류', kws:['농산물','종류','채소','작물','식품']},
         {key:'색상 점수',   kws:['색상']},
         {key:'외관 점수',   kws:['외관','질감']},
         {key:'종합 신선도 점수', kws:['종합','신선도 점수']},
+        {key:'상태 설명',   kws:['상태 설명','설명']},
         {key:'상태',        kws:['상태']},
-        {key:'상태 설명',   kws:['설명']},
         {key:'보관 방법',   kws:['보관','저장']},
         {key:'예상 남은 기한', kws:['기한','유통','남은']},
       ];

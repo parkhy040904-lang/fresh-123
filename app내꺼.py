@@ -3,6 +3,8 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Scan Eat!", page_icon="🌿", layout="wide")
 
+groq_key = st.secrets["GROQ_API_KEY"]
+
 st.markdown("""
 <style>
 #MainMenu, header, footer { visibility: hidden; }
@@ -311,7 +313,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 </div>
 
 <script>
-const GROQ_API_KEY = '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';
+const GROQ_API_KEY = '__GROQ_KEY__';
 let stream = null;
 let facingMode = 'environment';
 
@@ -579,4 +581,5 @@ async function fetchRecipe() {
 </body>
 </html>"""
 
+html = html.replace('__GROQ_KEY__', groq_key)
 components.html(html, height=920, scrolling=False)

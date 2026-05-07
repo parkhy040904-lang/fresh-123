@@ -416,12 +416,14 @@ function showResult(produce, score, colorScore, textureScore, status, desc, stor
   const s = parseFloat(score);
   if (s >= 8) {
     tagCls = 'g'; emoji = '🏆'; color = '#43a047'; statusLabel = '신선';
-  } else if (s >= 5) {
-    tagCls = 'y'; emoji = '👍'; color = '#fb8c00'; statusLabel = '보통';
-  } else if (s >= 3) {
-    tagCls = 'o'; emoji = '⚠️'; color = '#ff6f00'; statusLabel = '주의';
+  } else if (s >= 6) {
+    tagCls = 'g'; emoji = '👍'; color = '#7cb342'; statusLabel = '양호';
+  } else if (s >= 4) {
+    tagCls = 'y'; emoji = '⚠️'; color = '#fb8c00'; statusLabel = '주의';
+  } else if (s >= 2) {
+    tagCls = 'o'; emoji = '🚨'; color = '#e64a19'; statusLabel = '위험';
   } else {
-    tagCls = 'r'; emoji = '🚨'; color = '#e53935'; statusLabel = '경고';
+    tagCls = 'r'; emoji = '🚫'; color = '#e53935'; statusLabel = '폐기';
   }
   document.getElementById('remo').textContent = emoji;
   document.getElementById('rname').textContent = produce;
@@ -466,7 +468,7 @@ async function analyze(src) {
             role: 'user',
             content: [
               {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + base64}},
-              {type: 'text', text: '사진 속 농산물의 신선도를 아래 규칙에 따라 엄격하게 채점하세요.\\n\\n[필수 관찰 항목]\\n① 검은 반점·갈색 부패 부위가 있는가?\\n② 곰팡이(흰색/회색/검은색 가루·솜털)가 있는가?\\n③ 껍질이 주름지거나 물러진 부위가 있는가?\\n④ 표면이 균열되거나 즙이 새는가?\\n\\n[채점 규칙 - 절대 준수]\\n• ①~④ 중 하나라도 해당하면 → 종합 점수 3점 이하\\n• 검은 반점이나 곰팡이가 명확히 보이면 → 종합 점수 2점 이하\\n• 사진에 신선한 것과 상한 것이 섞여 있으면 → 가장 상한 것 기준으로 채점\\n• 전체가 완벽히 신선할 때만 7점 이상 가능\\n\\n[점수 기준]\\n9~10: 흠집 전혀 없이 완벽히 신선\\n7~8: 아주 작은 흠집, 전반적으로 신선\\n5~6: 변색 약간 있으나 섭취 가능\\n3~4: 부패 일부 시작, 섭취 주의\\n1~2: 곰팡이·광범위 부패, 섭취 불가\\n\\n[출력 형식 - 이것만 출력, 다른 말 금지]\\n농산물 종류: (이름)\\n색상 점수: (0.0~10.0)\\n외관 점수: (0.0~10.0)\\n종합 신선도 점수: (0.0~10.0)\\n상태: (신선/보통/주의/부패 중 하나)\\n상태 설명: (관찰한 특징 포함해서 두 문장)\\n보관 방법: (구체적 온도·방법)\\n예상 남은 기한: (기간)'}
+              {type: 'text', text: '사진 속 농산물의 신선도를 아래 규칙에 따라 엄격하게 채점하세요.\\n\\n[필수 관찰 항목]\\n① 검은 반점·갈색 부패 부위가 있는가?\\n② 곰팡이(흰색/회색/검은색 가루·솜털)가 있는가?\\n③ 껍질이 주름지거나 물러진 부위가 있는가?\\n④ 표면이 균열되거나 즙이 새는가?\\n\\n[채점 규칙 - 절대 준수]\\n• ①~④ 중 하나라도 해당하면 → 종합 점수 4점 이하\\n• 검은 반점이나 곰팡이가 명확히 보이면 → 종합 점수 2점 이하\\n• 곰팡이가 광범위하거나 악취 등 심각한 부패면 → 종합 점수 1점 이하\\n• 사진에 신선한 것과 상한 것이 섞여 있으면 → 가장 상한 것 기준으로 채점\\n• 전체가 완벽히 신선할 때만 8점 이상 가능\\n\\n[점수 기준]\\n8~10: 흠집 전혀 없이 완벽히 신선, 바로 섭취 가능\\n6~7: 아주 작은 흠집, 2~3일 내 섭취 권장\\n4~5: 변색·이상 있으나 오늘~내일 섭취 가능\\n2~3: 부패 일부, 섭취 위험\\n0~1: 곰팡이·광범위 부패, 즉시 폐기\\n\\n[출력 형식 - 이것만 출력, 다른 말 금지]\\n농산물 종류: (이름)\\n색상 점수: (0.0~10.0)\\n외관 점수: (0.0~10.0)\\n종합 신선도 점수: (0.0~10.0)\\n상태: (신선/보통/주의/부패 중 하나)\\n상태 설명: (관찰한 특징 포함해서 두 문장)\\n보관 방법: (구체적 온도·방법)\\n예상 남은 기한: (기간)'}
             ]
           }]
         })
@@ -508,9 +510,14 @@ async function analyze(src) {
       let cs = parseFloat(colorScore);
       let ts = parseFloat(textureScore);
       const combined = desc + ' ' + status;
-      const rotWords  = ['곰팡이','부패','썩','검은 반점','검은반점','흑변','악취'];
+      const moldWords = ['곰팡이','악취'];
+      const rotWords  = ['부패','썩','검은 반점','검은반점','흑변'];
       const warnWords = ['물러','주름','변색','균열','상함','상해'];
-      if (rotWords.some(w => combined.includes(w)) || status === '부패') {
+      if (moldWords.some(w => combined.includes(w))) {
+        s  = Math.min(s,  1.9);
+        cs = Math.min(cs, 2.0);
+        ts = Math.min(ts, 2.0);
+      } else if (rotWords.some(w => combined.includes(w)) || status === '부패') {
         s  = Math.min(s,  2.9);
         cs = Math.min(cs, 3.0);
         ts = Math.min(ts, 3.0);
@@ -522,7 +529,12 @@ async function analyze(src) {
       const score = s.toFixed(1);
       const colorScoreFinal   = cs.toFixed(1);
       const textureScoreFinal = ts.toFixed(1);
-      showResult(produce, score, colorScoreFinal, textureScoreFinal, status, desc, storage, shelf);
+      let shelfFinal;
+      if (s < 2) shelfFinal = '즉시 버리세요 (섭취 불가)';
+      else if (s < 4) shelfFinal = '오늘 안에 폐기하거나 상한 부분 완전히 제거 후 확인';
+      else if (s < 6) shelfFinal = shelf || '오늘~내일 사용 권장';
+      else shelfFinal = shelf;
+      showResult(produce, score, colorScoreFinal, textureScoreFinal, status, desc, storage, shelfFinal);
     } catch(err) {
       document.getElementById('remo').textContent = '❌';
       document.getElementById('rname').textContent = '분석 실패';

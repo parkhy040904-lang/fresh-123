@@ -500,11 +500,18 @@ async function analyze(src) {
       const produce      = sections['농산물 종류'] || '농산물';
       const colorScore   = parseScore(sections['색상 점수']);
       const textureScore = parseScore(sections['외관 점수']);
-      const score        = parseScore(sections['종합 신선도 점수']);
       const status       = sections['상태'] || '보통';
       const desc         = sections['상태 설명'] || '';
       const storage      = sections['보관 방법'] || '';
       const shelf        = sections['예상 남은 기한'] || '';
+      let s = parseFloat(parseScore(sections['종합 신선도 점수']));
+      const combined = desc + ' ' + status;
+      const rotWords = ['곰팡이','부패','썩','검은 반점','검은반점','흑변','악취'];
+      const warnWords = ['물러','주름','변색','균열','상함','상해'];
+      if (rotWords.some(w => combined.includes(w)) && s > 2.9) s = 2.0;
+      else if (status === '부패' && s > 2.9) s = 2.0;
+      else if ((status === '주의' || warnWords.some(w => combined.includes(w))) && s > 4.9) s = 4.0;
+      const score = s.toFixed(1);
       showResult(produce, score, colorScore, textureScore, status, desc, storage, shelf);
     } catch(err) {
       document.getElementById('remo').textContent = '❌';

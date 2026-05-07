@@ -128,12 +128,29 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .score-item{background:#f7f7f7;border-radius:12px;padding:9px 6px;text-align:center;}
 .score-label{font-size:9px;color:#aaa;font-weight:700;letter-spacing:0.02em;}
 .score-val{font-size:20px;font-weight:900;margin-top:2px;}
-.recipe-btn{width:100%;margin-top:10px;padding:11px;
+.btn-row{display:none;gap:8px;margin-top:10px;}
+.recipe-btn{flex:1;padding:11px;
   background:linear-gradient(135deg,#2d7a3a,#4caf50);
   border:none;border-radius:14px;color:#fff;
-  font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;
-  cursor:pointer;box-shadow:0 4px 14px rgba(76,175,80,0.35);transition:transform 0.15s;display:none;}
+  font-size:13px;font-weight:800;font-family:'Nunito',sans-serif;
+  cursor:pointer;box-shadow:0 4px 14px rgba(76,175,80,0.35);transition:transform 0.15s;}
 .recipe-btn:active{transform:scale(0.97);}
+.compare-btn{flex:1;padding:11px;
+  background:linear-gradient(135deg,#0277bd,#0288d1);
+  border:none;border-radius:14px;color:#fff;
+  font-size:13px;font-weight:800;font-family:'Nunito',sans-serif;
+  cursor:pointer;box-shadow:0 4px 14px rgba(2,136,209,0.3);transition:transform 0.15s;}
+.compare-btn:active{transform:scale(0.97);}
+.cbox{background:#fff;border-radius:20px;padding:18px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.07);margin-top:10px;display:none;}
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.cmp-card{background:#f7f9f7;border-radius:14px;padding:12px;text-align:center;position:relative;}
+.cmp-card.winner{background:#e8f5e9;border:2px solid #4caf50;}
+.cmp-label{font-size:10px;font-weight:800;color:#aaa;margin-bottom:4px;}
+.cmp-name{font-size:13px;font-weight:900;color:#111;}
+.cmp-score{font-size:26px;font-weight:900;margin:4px 0;}
+.cmp-badge{position:absolute;top:-8px;right:-8px;background:#4caf50;color:#fff;
+  font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;}
 .rbox2{background:#fff;border-radius:20px;padding:18px;
   box-shadow:0 4px 16px rgba(0,0,0,0.07);margin-top:10px;display:none;}
 .recipe-name{font-size:15px;font-weight:900;color:#111;}
@@ -230,9 +247,28 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
         <div class="score-grid" id="scoreGrid"></div>
         <div class="tags" id="rtags"></div>
         <div class="tip" id="rtip"></div>
-        <button class="recipe-btn" id="recipeBtn" onclick="fetchRecipe()">🍳 이 재료로 만드는 레시피 보기</button>
+        <div class="btn-row" id="btnRow">
+          <button class="recipe-btn" id="recipeBtn" onclick="fetchRecipe()">🍳 레시피 보기</button>
+          <button class="compare-btn" onclick="startCompare()">📊 비교하기</button>
+        </div>
       </div>
       <div class="rbox2" id="rbox2"></div>
+      <div class="cbox" id="cbox">
+        <div style="font-size:13px;font-weight:800;color:#111;margin-bottom:10px;">📊 비교할 사진 추가</div>
+        <label style="background:#f7f9f7;border:2px dashed #90caf9;border-radius:14px;padding:14px;display:flex;align-items:center;gap:10px;cursor:pointer;" for="compareInput">
+          <div style="width:38px;height:38px;background:linear-gradient(135deg,#e3f2fd,#bbdefb);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📷</div>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:#1565c0;">사진 선택</div>
+            <div style="font-size:11px;color:#999;margin-top:1px;font-weight:600;">JPG · PNG 업로드</div>
+          </div>
+        </label>
+        <input type="file" id="compareInput" accept="image/*" style="display:none" onchange="loadCompareFile(event)">
+        <div id="comparePreview" style="display:none;margin-top:10px;">
+          <img id="compareImg" src="" style="width:100%;border-radius:14px;max-height:160px;object-fit:cover;border:2px solid #90caf9;display:block;">
+          <button class="abtn" style="background:linear-gradient(135deg,#0277bd,#0288d1);box-shadow:0 4px 14px rgba(2,136,209,0.3);" onclick="analyzeCompare()">📊 비교 분석하기</button>
+        </div>
+        <div id="compareResult" style="display:none;margin-top:12px;"></div>
+      </div>
     </div>
 
     <div class="sec" style="padding-bottom:24px">
@@ -319,6 +355,7 @@ const GEMINI_API_KEY = '__GEMINI_KEY__';
 let stream = null;
 let facingMode = 'environment';
 let shownRecipes = [];
+let lastResult = null;
 
 function updateClock() {
   const now = new Date();
@@ -446,8 +483,12 @@ function showResult(produce, score, colorScore, textureScore, status, desc, stor
     '💡 ' + (desc || '분석이 완료됐어요!') + '<br><br>' +
     '🏪 <b>보관법:</b> ' + (storage || '—') + '<br>' +
     '⏰ <b>남은 기한:</b> ' + (shelf || '—');
-  document.getElementById('recipeBtn').style.display = 'block';
+  document.getElementById('btnRow').style.display = 'flex';
   shownRecipes = [];
+  lastResult = {produce, score, colorScore: colorScoreFinal, textureScore: textureScoreFinal, desc};
+  document.getElementById('cbox').style.display = 'none';
+  document.getElementById('comparePreview').style.display = 'none';
+  document.getElementById('compareResult').style.display = 'none';
   document.getElementById('rbox').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
@@ -552,6 +593,98 @@ async function analyze(src) {
   };
   if (imgEl.complete && imgEl.naturalWidth > 0) run();
   else { imgEl.onload = run; }
+}
+
+function startCompare() {
+  const cbox = document.getElementById('cbox');
+  cbox.style.display = 'block';
+  document.getElementById('rbox2').style.display = 'none';
+  cbox.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function loadCompareFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('compareImg').src = ev.target.result;
+    document.getElementById('comparePreview').style.display = 'block';
+    document.getElementById('compareResult').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeCompare() {
+  const imgEl = document.getElementById('compareImg');
+  if (!imgEl.src || imgEl.src === '') { alert('사진을 먼저 선택해주세요!'); return; }
+  const resultEl = document.getElementById('compareResult');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div style="text-align:center;padding:16px;color:#aaa;font-size:13px;font-weight:700;">⏳ 분석 중...</div>';
+  try {
+    const base64 = imgToBase64(imgEl);
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        temperature: 0,
+        messages: [{
+          role: 'user',
+          content: [
+            {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + base64}},
+            {type: 'text', text: '사진 속 농산물의 신선도를 아래 규칙에 따라 엄격하게 채점하세요.\\n\\n[필수 관찰 항목]\\n① 검은 반점·갈색 부패 부위가 있는가?\\n② 곰팡이(흰색/회색/검은색 가루·솜털)가 있는가?\\n③ 껍질이 주름지거나 물러진 부위가 있는가?\\n④ 표면이 균열되거나 즙이 새는가?\\n\\n[채점 규칙 - 절대 준수]\\n• ①~④ 중 하나라도 해당하면 → 종합 점수 4점 이하\\n• 검은 반점이나 곰팡이가 명확히 보이면 → 종합 점수 2점 이하\\n• 곰팡이가 광범위하거나 악취 등 심각한 부패면 → 종합 점수 1점 이하\\n• 전체가 완벽히 신선할 때만 8점 이상 가능\\n\\n[점수 기준]\\n8~10: 완벽히 신선\\n6~7: 아주 작은 흠집\\n4~5: 변색·이상 있음\\n2~3: 부패 일부\\n0~1: 곰팡이·광범위 부패\\n\\n[출력 형식 - 이것만 출력]\\n농산물 종류: (이름)\\n종합 신선도 점수: (0.0~10.0)\\n상태 설명: (한 문장)'}
+          ]
+        }]
+      })
+    });
+    if (!res.ok) throw new Error('API 오류: ' + res.status);
+    const json = await res.json();
+    const raw = json.choices[0].message.content.replace(/\*+/g,'').replace(/#+/g,'').trim();
+    const sectionKeys = [
+      {key:'농산물 종류', kws:['농산물','종류','채소','작물','식품']},
+      {key:'종합 신선도 점수', kws:['종합','신선도 점수']},
+      {key:'상태 설명', kws:['상태 설명','설명']},
+    ];
+    const sections = {}; let curSec = null;
+    for (const line of raw.split('\\n')) {
+      const ci = line.indexOf(':');
+      const k = ci > -1 ? line.slice(0, ci).trim() : '';
+      const v = ci > -1 ? line.slice(ci + 1).trim() : line.trim();
+      const matched = sectionKeys.find(s => s.kws.some(kw => k.includes(kw)) && k.length < 20);
+      if (matched) { curSec = matched.key; sections[curSec] = v; }
+      else if (curSec && line.trim()) sections[curSec] += ' ' + line.trim();
+    }
+    const parseScore = r => { const m = (r||'').match(/([\d.]+)/); return m ? parseFloat(m[1]).toFixed(1) : '5.0'; };
+    const bProduce = sections['농산물 종류'] || '농산물';
+    const bScore   = parseFloat(parseScore(sections['종합 신선도 점수']));
+    const bDesc    = sections['상태 설명'] || '';
+    const aScore   = parseFloat(lastResult.score);
+    const diff     = Math.abs(aScore - bScore).toFixed(1);
+    const aWins    = aScore > bScore;
+    const tie      = diff < 0.5;
+    const summary  = tie
+      ? '두 개의 신선도가 거의 비슷합니다.'
+      : (aWins ? 'A가 ' + diff + '점 더 신선합니다. A를 선택하세요! 👈' : 'B가 ' + diff + '점 더 신선합니다. B를 선택하세요! 👉');
+    resultEl.innerHTML =
+      '<div class="cmp-grid">' +
+        '<div class="cmp-card' + (aWins || tie ? ' winner' : '') + '">' +
+          (aWins ? '<div class="cmp-badge">✅ 추천</div>' : '') +
+          '<div class="cmp-label">A (처음 것)</div>' +
+          '<div class="cmp-name">' + lastResult.produce + '</div>' +
+          '<div class="cmp-score" style="color:' + scoreColor(lastResult.score) + '">' + lastResult.score + '</div>' +
+        '</div>' +
+        '<div class="cmp-card' + (!aWins || tie ? ' winner' : '') + '">' +
+          (!aWins ? '<div class="cmp-badge">✅ 추천</div>' : '') +
+          '<div class="cmp-label">B (비교 것)</div>' +
+          '<div class="cmp-name">' + bProduce + '</div>' +
+          '<div class="cmp-score" style="color:' + scoreColor(bScore.toFixed(1)) + '">' + bScore.toFixed(1) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="background:#f5f5f5;border-radius:12px;padding:10px 12px;margin-top:10px;font-size:12px;font-weight:700;color:#333;text-align:center;">' + summary + '</div>';
+    resultEl.scrollIntoView({behavior:'smooth', block:'nearest'});
+  } catch(err) {
+    resultEl.innerHTML = '<div style="text-align:center;padding:16px;color:#e53935;font-size:13px;font-weight:700;">오류: ' + err.message + '</div>';
+  }
 }
 
 async function fetchRecipe() {

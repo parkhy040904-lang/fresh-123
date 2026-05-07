@@ -316,6 +316,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 const GROQ_API_KEY = '__GROQ_KEY__';
 let stream = null;
 let facingMode = 'environment';
+let shownRecipes = [];
 
 function updateClock() {
   const now = new Date();
@@ -442,6 +443,7 @@ function showResult(produce, score, colorScore, textureScore, status, desc, stor
     '🏪 <b>보관법:</b> ' + (storage || '—') + '<br>' +
     '⏰ <b>남은 기한:</b> ' + (shelf || '—');
   document.getElementById('recipeBtn').style.display = 'block';
+  shownRecipes = [];
   document.getElementById('rbox').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
@@ -532,7 +534,7 @@ async function fetchRecipe() {
         model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         messages: [{
           role: 'user',
-          content: '재료: ' + produce + '\\n\\n이 재료가 원래부터 들어가는 잘 알려진 요리의 레시피를 알려주세요.\\n(예시: 무→무국/깍두기, 사과→사과잼/사과샐러드, 오이→오이냉국/오이소박이, 당근→당근라페/잡채)\\n\\n주의: 억지로 재료를 끼워 넣은 요리는 안 됩니다. 반드시 그 재료가 원래 들어가는 음식이어야 합니다.\\n아래 형식으로만 답하고 다른 말은 절대 쓰지 마세요.\\n\\n요리이름: (실제 존재하는 요리명)\\n조리시간: (총 소요시간)\\n재료: (2인분 기준, 재료명 + 정확한 양을 쉼표로 나열. 예: 무 300g, 물 500ml, 국간장 1큰술)\\n조리법: (1. 단계. 2. 단계. 형식으로 불 세기·시간 포함해 상세하게)'
+          content: '재료: ' + produce + '\\n\\n이 재료가 원래부터 들어가는 잘 알려진 요리의 레시피를 알려주세요.\\n(예시: 무→무국/깍두기, 사과→사과잼/사과샐러드, 오이→오이냉국/오이소박이, 당근→당근라페/잡채)\\n\\n주의: 억지로 재료를 끼워 넣은 요리는 안 됩니다. 반드시 그 재료가 원래 들어가는 음식이어야 합니다.' + (shownRecipes.length ? '\\n이미 보여준 요리(' + shownRecipes.join(', ') + ')는 제외하고 다른 요리를 알려주세요.' : '') + '\\n아래 형식으로만 답하고 다른 말은 절대 쓰지 마세요.\\n\\n요리이름: (실제 존재하는 요리명)\\n조리시간: (총 소요시간)\\n재료: (2인분 기준, 재료명 + 정확한 양을 쉼표로 나열. 예: 무 300g, 물 500ml, 국간장 1큰술)\\n조리법: (1. 단계. 2. 단계. 형식으로 불 세기·시간 포함해 상세하게)'
         }]
       })
     });
@@ -557,6 +559,7 @@ async function fetchRecipe() {
       }
     });
     const name  = sections['요리이름'] || sections['레시피명'] || produce + ' 레시피';
+    shownRecipes.push(name);
     const time  = sections['조리시간'] || sections['조리 시간'] || '—';
     const ingr  = sections['재료'] || '';
     const steps = sections['조리법'] || '';

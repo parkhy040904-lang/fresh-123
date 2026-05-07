@@ -444,7 +444,7 @@ function showLoading() {
   document.getElementById('scoreGrid').innerHTML = '';
   document.getElementById('rtags').innerHTML = '';
   document.getElementById('rtip').textContent = 'AI가 사진을 분석하고 있어요 🤖';
-  document.getElementById('recipeBtn').style.display = 'none';
+  document.getElementById('btnRow').style.display = 'none';
   document.getElementById('rbox2').style.display = 'none';
   rbox.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
@@ -485,7 +485,7 @@ function showResult(produce, score, colorScore, textureScore, status, desc, stor
     '⏰ <b>남은 기한:</b> ' + (shelf || '—');
   document.getElementById('btnRow').style.display = 'flex';
   shownRecipes = [];
-  lastResult = {produce, score, colorScore: colorScoreFinal, textureScore: textureScoreFinal, desc};
+  lastResult = {produce, score, colorScore, textureScore, desc};
   document.getElementById('cbox').style.display = 'none';
   document.getElementById('comparePreview').style.display = 'none';
   document.getElementById('compareResult').style.display = 'none';

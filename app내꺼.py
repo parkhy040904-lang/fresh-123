@@ -510,18 +510,23 @@ async function analyze(src) {
       let cs = parseFloat(colorScore);
       let ts = parseFloat(textureScore);
       const combined = desc + ' ' + status;
+      const negWords  = ['없','않','전혀','아닌','안 '];
+      const sentences = combined.split(/[.!?\n。]/);
+      const hasBad = (words) => sentences.some(sent =>
+        words.some(w => sent.includes(w)) && !negWords.some(neg => sent.includes(neg))
+      );
       const moldWords = ['곰팡이','악취'];
       const rotWords  = ['부패','썩','검은 반점','검은반점','흑변'];
       const warnWords = ['물러','주름','변색','균열','상함','상해'];
-      if (moldWords.some(w => combined.includes(w))) {
+      if (hasBad(moldWords)) {
         s  = Math.min(s,  1.9);
         cs = Math.min(cs, 2.0);
         ts = Math.min(ts, 2.0);
-      } else if (rotWords.some(w => combined.includes(w)) || status === '부패') {
+      } else if (hasBad(rotWords) || status === '부패') {
         s  = Math.min(s,  2.9);
         cs = Math.min(cs, 3.0);
         ts = Math.min(ts, 3.0);
-      } else if (status === '주의' || warnWords.some(w => combined.includes(w))) {
+      } else if (status === '주의' || hasBad(warnWords)) {
         s  = Math.min(s,  4.9);
         cs = Math.min(cs, 5.0);
         ts = Math.min(ts, 5.0);

@@ -573,21 +573,26 @@ async function fetchRecipe() {
       .replace(/\*+/g, '').replace(/#+/g, '').replace(/\$/g, '')
       .replace(/`+/g, '').replace(/_{2,}/g, '')
       .trim();
-    const topKeys = ['요리이름','레시피명','조리시간','조리 시간','재료','조리법'];
+    const recipeKeys = [
+      {key:'요리이름', kws:['요리이름','레시피명','음식이름','요리 이름','레시피 이름','dish']},
+      {key:'조리시간', kws:['조리시간','조리 시간','소요시간','요리시간','시간']},
+      {key:'재료',    kws:['재료','ingredients']},
+      {key:'조리법',  kws:['조리법','조리 방법','만드는 방법','만들기','instructions']},
+    ];
     const sections = {};
     let curKey = null;
     raw.split('\\n').forEach(line => {
       const ci = line.indexOf(':');
       const maybeKey = ci > -1 ? line.slice(0, ci).trim() : '';
-      const matched = topKeys.find(k => maybeKey === k);
+      const matched = recipeKeys.find(r => r.kws.some(kw => maybeKey.includes(kw)) && maybeKey.length < 20);
       if (matched) {
-        curKey = matched;
+        curKey = matched.key;
         sections[curKey] = line.slice(ci + 1).trim();
       } else if (curKey && line.trim()) {
         sections[curKey] += '\\n' + line.trim();
       }
     });
-    const name  = sections['요리이름'] || sections['레시피명'] || produce + ' 레시피';
+    const name  = sections['요리이름'] || produce + ' 레시피';
     shownRecipes.push(name);
     const time  = sections['조리시간'] || sections['조리 시간'] || '—';
     const ingr  = sections['재료'] || '';

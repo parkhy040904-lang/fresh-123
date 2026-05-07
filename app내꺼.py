@@ -464,6 +464,7 @@ async function analyze(src) {
         },
         body: JSON.stringify({
           model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          temperature: 0,
           messages: [{
             role: 'user',
             content: [

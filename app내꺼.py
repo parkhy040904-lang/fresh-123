@@ -735,6 +735,17 @@ async function analyzeCompare() {
     const bProduce = sections['농산물 종류'] || '농산물';
     const bScore   = parseFloat(parseScore(sections['종합 신선도 점수']));
     const bDesc    = sections['상태 설명'] || '';
+    const aProduce = lastResult.produce;
+    if (!aProduce.includes(bProduce) && !bProduce.includes(aProduce)) {
+      resultEl.innerHTML =
+        '<div style="background:#fff3e0;border-radius:14px;padding:14px 16px;text-align:center;">' +
+          '<div style="font-size:28px;margin-bottom:6px;">🚫</div>' +
+          '<div style="font-size:13px;font-weight:800;color:#e65100;">다른 종류라 비교할 수 없어요</div>' +
+          '<div style="font-size:11px;color:#888;font-weight:600;margin-top:6px;">A: ' + aProduce + ' &nbsp;|&nbsp; B: ' + bProduce + '</div>' +
+          '<div style="font-size:11px;color:#aaa;font-weight:600;margin-top:4px;">같은 종류의 농산물을 비교해주세요</div>' +
+        '</div>';
+      return;
+    }
     const aScore   = parseFloat(lastResult.score);
     const diff     = Math.abs(aScore - bScore).toFixed(1);
     const aWins    = aScore > bScore;

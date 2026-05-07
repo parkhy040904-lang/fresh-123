@@ -255,14 +255,35 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
       <div class="rbox2" id="rbox2"></div>
       <div class="cbox" id="cbox">
         <div style="font-size:13px;font-weight:800;color:#111;margin-bottom:10px;">📊 비교할 사진 추가</div>
-        <label style="background:#f7f9f7;border:2px dashed #90caf9;border-radius:14px;padding:14px;display:flex;align-items:center;gap:10px;cursor:pointer;" for="compareInput">
-          <div style="width:38px;height:38px;background:linear-gradient(135deg,#e3f2fd,#bbdefb);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📷</div>
-          <div>
-            <div style="font-size:13px;font-weight:800;color:#1565c0;">사진 선택</div>
-            <div style="font-size:11px;color:#999;margin-top:1px;font-weight:600;">JPG · PNG 업로드</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <button id="cmpTabCam" onclick="switchCmpTab('cam')" style="flex:1;padding:8px;border-radius:10px;border:none;background:#e3f2fd;color:#1565c0;font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;">📷 카메라</button>
+          <button id="cmpTabFile" onclick="switchCmpTab('file')" style="flex:1;padding:8px;border-radius:10px;border:none;background:#f0f0f0;color:#888;font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;">🖼️ 갤러리</button>
+        </div>
+        <div id="cmpCamSection">
+          <div style="background:linear-gradient(145deg,#1a1a2e,#0f3460);border-radius:16px;height:160px;position:relative;overflow:hidden;">
+            <video id="compareCamVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;display:none;"></video>
+            <div id="compareCamPH" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;" onclick="startCompareCam()">
+              <div style="font-size:36px;margin-bottom:6px;">📸</div>
+              <div style="color:#fff;font-size:13px;font-weight:700;">탭하여 카메라 시작</div>
+            </div>
+            <div id="compareCamBtns" style="position:absolute;bottom:10px;left:0;right:0;display:none;justify-content:center;gap:8px;">
+              <button class="cbtn stop" onclick="stopCompareCam(event)">✕ 취소</button>
+              <button class="cbtn flip" onclick="flipCompareCam(event)">🔄 전환</button>
+              <button class="cbtn shoot" onclick="shootCompare(event)">📸 촬영</button>
+            </div>
           </div>
-        </label>
-        <input type="file" id="compareInput" accept="image/*" style="display:none" onchange="loadCompareFile(event)">
+        </div>
+        <div id="cmpFileSection" style="display:none;">
+          <label style="background:#f7f9f7;border:2px dashed #90caf9;border-radius:14px;padding:14px;display:flex;align-items:center;gap:10px;cursor:pointer;" for="compareInput">
+            <div style="width:38px;height:38px;background:linear-gradient(135deg,#e3f2fd,#bbdefb);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📁</div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#1565c0;">사진 선택</div>
+              <div style="font-size:11px;color:#999;margin-top:1px;font-weight:600;">JPG · PNG 업로드</div>
+            </div>
+          </label>
+          <input type="file" id="compareInput" accept="image/*" style="display:none" onchange="loadCompareFile(event)">
+        </div>
+        <canvas id="compareCvs" style="display:none"></canvas>
         <div id="comparePreview" style="display:none;margin-top:10px;">
           <img id="compareImg" src="" style="width:100%;border-radius:14px;max-height:160px;object-fit:cover;border:2px solid #90caf9;display:block;">
           <button class="abtn" style="background:linear-gradient(135deg,#0277bd,#0288d1);box-shadow:0 4px 14px rgba(2,136,209,0.3);" onclick="analyzeCompare()">📊 비교 분석하기</button>
@@ -356,6 +377,8 @@ let stream = null;
 let facingMode = 'environment';
 let shownRecipes = [];
 let lastResult = null;
+let compareStream = null;
+let compareFacingMode = 'environment';
 
 function updateClock() {
   const now = new Date();
@@ -486,6 +509,7 @@ function showResult(produce, score, colorScore, textureScore, status, desc, stor
   document.getElementById('btnRow').style.display = 'flex';
   shownRecipes = [];
   lastResult = {produce, score, colorScore, textureScore, desc};
+  if (compareStream) stopCompareCam(null);
   document.getElementById('cbox').style.display = 'none';
   document.getElementById('comparePreview').style.display = 'none';
   document.getElementById('compareResult').style.display = 'none';
@@ -599,7 +623,60 @@ function startCompare() {
   const cbox = document.getElementById('cbox');
   cbox.style.display = 'block';
   document.getElementById('rbox2').style.display = 'none';
+  switchCmpTab('cam');
   cbox.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function switchCmpTab(tab) {
+  const isCam = tab === 'cam';
+  document.getElementById('cmpCamSection').style.display = isCam ? 'block' : 'none';
+  document.getElementById('cmpFileSection').style.display = isCam ? 'none' : 'block';
+  document.getElementById('cmpTabCam').style.background = isCam ? '#e3f2fd' : '#f0f0f0';
+  document.getElementById('cmpTabCam').style.color = isCam ? '#1565c0' : '#888';
+  document.getElementById('cmpTabFile').style.background = isCam ? '#f0f0f0' : '#e3f2fd';
+  document.getElementById('cmpTabFile').style.color = isCam ? '#888' : '#1565c0';
+  if (!isCam) stopCompareCam(null);
+}
+
+async function startCompareCam(mode) {
+  if (mode) compareFacingMode = mode;
+  try {
+    if (compareStream) { compareStream.getTracks().forEach(t => t.stop()); compareStream = null; }
+    compareStream = await navigator.mediaDevices.getUserMedia({video:{facingMode: compareFacingMode}, audio:false});
+    const v = document.getElementById('compareCamVideo');
+    v.srcObject = compareStream;
+    v.style.display = 'block';
+    document.getElementById('compareCamPH').style.display = 'none';
+    document.getElementById('compareCamBtns').style.display = 'flex';
+  } catch(e) {
+    alert('카메라 권한을 허용해주세요.\\n(HTTPS 또는 localhost 환경 필요)');
+  }
+}
+
+function flipCompareCam(e) {
+  e.stopPropagation();
+  startCompareCam(compareFacingMode === 'environment' ? 'user' : 'environment');
+}
+
+function stopCompareCam(e) {
+  if (e) e.stopPropagation();
+  if (compareStream) { compareStream.getTracks().forEach(t => t.stop()); compareStream = null; }
+  document.getElementById('compareCamVideo').style.display = 'none';
+  document.getElementById('compareCamPH').style.display = 'flex';
+  document.getElementById('compareCamBtns').style.display = 'none';
+}
+
+function shootCompare(e) {
+  e.stopPropagation();
+  const v = document.getElementById('compareCamVideo');
+  const c = document.getElementById('compareCvs');
+  c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext('2d').drawImage(v, 0, 0);
+  const url = c.toDataURL('image/jpeg');
+  stopCompareCam(null);
+  document.getElementById('compareImg').src = url;
+  document.getElementById('comparePreview').style.display = 'block';
+  document.getElementById('compareResult').style.display = 'none';
 }
 
 function loadCompareFile(e) {

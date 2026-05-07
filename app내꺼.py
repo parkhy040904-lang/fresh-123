@@ -511,7 +511,7 @@ async function analyze(src) {
       let ts = parseFloat(textureScore);
       const combined = desc + ' ' + status;
       const negWords  = ['없','않','전혀','아닌','안 '];
-      const sentences = combined.split(/[.!?\n。]/);
+      const sentences = combined.split(/[.!?\\n。]/);
       const hasBad = (words) => sentences.some(sent =>
         words.some(w => sent.includes(w)) && !negWords.some(neg => sent.includes(neg))
       );

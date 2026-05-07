@@ -392,7 +392,7 @@ function imgToBase64(imgEl) {
 
 function scoreColor(s) {
   const n = parseFloat(s);
-  return n >= 8 ? '#43a047' : n >= 5 ? '#fb8c00' : n >= 3 ? '#ff6f00' : '#e53935';
+  return n >= 8 ? '#43a047' : n >= 6 ? '#7cb342' : n >= 4 ? '#fb8c00' : n >= 2 ? '#e64a19' : '#e53935';
 }
 
 function showLoading() {
@@ -580,7 +580,7 @@ async function fetchRecipe() {
       .trim();
     const recipeKeys = [
       {key:'요리이름', kws:['요리이름','레시피명','음식이름','요리 이름','레시피 이름','dish']},
-      {key:'조리시간', kws:['조리시간','조리 시간','소요시간','요리시간','시간']},
+      {key:'조리시간', kws:['조리시간','조리 시간','소요시간','요리시간']},
       {key:'재료',    kws:['재료','ingredients']},
       {key:'조리법',  kws:['조리법','조리 방법','만드는 방법','만들기','instructions']},
     ];
@@ -599,7 +599,7 @@ async function fetchRecipe() {
     });
     const name  = sections['요리이름'] || produce + ' 레시피';
     shownRecipes.push(name);
-    const time  = sections['조리시간'] || sections['조리 시간'] || '—';
+    const time  = sections['조리시간'] || '—';
     const ingr  = sections['재료'] || '';
     const steps = sections['조리법'] || '';
     const ingrHtml  = ingr.split(/[,\\n]/).map(s => s.trim()).filter(Boolean).map(s => '• ' + s).join('<br>');

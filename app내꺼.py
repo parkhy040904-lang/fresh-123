@@ -207,7 +207,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .tab-hdr-title{font-size:20px;font-weight:900;color:#fff;}
 .tab-hdr-sub{color:rgba(255,255,255,0.75);font-size:12px;font-weight:600;margin-top:3px;}
 .plist{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
-.pitem-wrap{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.pitem-wrap{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);flex-shrink:0;}
 .pitem{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background 0.15s;}
 .pitem:active{background:#f5f5f5;}
 .pitem-emo{font-size:36px;flex-shrink:0;}

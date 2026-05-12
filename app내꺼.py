@@ -214,7 +214,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .pitem-emo{font-size:32px;flex-shrink:0;}
 .pitem-info{flex:1;}
 .pitem-name{font-size:14px;font-weight:800;color:#111;}
-.pitem-badge{display:inline-block;background:#e8f5e9;color:#2d7a3a;font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px;margin-top:3px;}
+.pitem-badge{display:inline-block;background:#e8f5e9;color:#2d7a3a;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;margin-top:5px;letter-spacing:0.01em;}
 .pitem-badge.blue{background:#e3f2fd;color:#1565c0;}
 .pitem-arrow{color:#ccc;font-size:20px;font-weight:700;transition:transform 0.2s;flex-shrink:0;}
 .pitem-wrap.open .pitem-arrow{transform:rotate(90deg);}
@@ -979,7 +979,7 @@ async function loadRecipeForProduce(name, idx) {
     body: JSON.stringify({
       model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       messages: [{role:'user', content:
-        '재료: ' + name + '\\n\\n이 재료가 원래부터 들어가는 잘 알려진 요리의 레시피 3개를 알려주세요.\\n반드시 "---"으로 각 레시피를 구분하고 아래 형식으로만 답하세요. 다른 말은 절대 쓰지 마세요.\\n\\n요리이름: (실제 존재하는 요리명)\\n조리시간: (총 소요시간)\\n재료: (2인분 기준, 재료명+양 쉼표 나열)\\n조리법: (1. 단계 2. 단계 형식)\\n---'
+        '재료: ' + name + '\\n\\n이 재료가 주재료인 대중적이고 자주 해먹는 한국 가정식 요리 3가지 레시피를 알려주세요.\\n(예: 사과→사과잼·사과샐러드, 무→무국·깍두기, 딸기→딸기주스·딸기잼, 감자→감자볶음·감자조림·감자전, 배추→배추된장국·배추볶음)\\n주의: 장아찌·절임처럼 생소한 요리 말고, 집에서 자주 해먹는 친숙한 요리로만 추천하세요.\\n반드시 "---"으로 각 레시피를 구분하고 아래 형식으로만 답하세요. 다른 말은 절대 쓰지 마세요.\\n\\n요리이름: (실제 존재하는 요리명)\\n조리시간: (총 소요시간)\\n재료: (2인분 기준, 재료명+양 쉼표 나열)\\n조리법: (1. 단계 2. 단계 형식)\\n---'
       }]
     })
   });
@@ -1059,7 +1059,6 @@ function showPage(page) {
   document.getElementById(btnMap[page]).classList.add('active');
 }
 
-initProduceLists();
 </script>
 </body>
 </html>"""

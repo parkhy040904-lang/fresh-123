@@ -17,6 +17,30 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+PRODUCE_DATA = [
+    ('사과','🍎'),('딸기','🍓'),('토마토','🍅'),('배추','🥬'),
+    ('감자','🥔'),('당근','🥕'),('오이','🥒'),('양파','🧅'),
+    ('무','🫜'),('수박','🍉'),('포도','🍇'),('바나나','🍌'),
+]
+def make_produce_list(t):
+    badge = '레시피 3개' if t=='recipe' else '세척·손질·보관'
+    bc = ' blue' if t=='prep' else ''
+    rows=[]
+    for i,(name,emoji) in enumerate(PRODUCE_DATA):
+        rows.append(
+            f'<div class="pitem-wrap" id="{t}Wrap{i}">'
+            f'<div class="pitem" onclick="toggleProduceItem(\'{t}\',{i},\'{name}\')">'
+            f'<span class="pitem-emo">{emoji}</span>'
+            f'<div class="pitem-info"><div class="pitem-name">{name}</div>'
+            f'<span class="pitem-badge{bc}">{badge}</span></div>'
+            f'<span class="pitem-arrow">&#x203A;</span></div>'
+            f'<div class="pitem-detail" id="{t}Detail{i}"></div></div>'
+        )
+    return ''.join(rows)
+
+recipe_list_html = make_produce_list('recipe')
+prep_list_html   = make_produce_list('prep')
+
 html = """<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -394,6 +418,37 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 
     <div style="text-align:center;color:#aaa;font-size:0.78rem;padding:1.5rem 0;">Scan Eat! © 2026</div>
 
+  </div>
+  </div><!-- /pageHome -->
+
+  <div id="pageRecipe" class="page">
+    <div class="tab-hdr">
+      <div class="tab-hdr-title">🍳 레시피</div>
+      <div class="tab-hdr-sub">농산물을 선택하면 레시피를 볼 수 있어요</div>
+    </div>
+    <div class="scroll plist" id="recipeList">__RECIPE_LIST__</div>
+  </div>
+
+  <div id="pagePrep" class="page">
+    <div class="tab-hdr">
+      <div class="tab-hdr-title">🔪 손질법</div>
+      <div class="tab-hdr-sub">농산물을 선택하면 손질법을 볼 수 있어요</div>
+    </div>
+    <div class="scroll plist" id="prepList">__PREP_LIST__</div>
+  </div>
+
+  </div><!-- /pages -->
+
+  <div class="bnav">
+    <button class="bnav-btn active" id="btnHome" onclick="showPage('home')">
+      <span class="bnav-ico">🏠</span><span>홈</span>
+    </button>
+    <button class="bnav-btn" id="btnRecipe" onclick="showPage('recipe')">
+      <span class="bnav-ico">🍳</span><span>레시피</span>
+    </button>
+    <button class="bnav-btn" id="btnPrep" onclick="showPage('prep')">
+      <span class="bnav-ico">🔪</span><span>손질법</span>
+    </button>
   </div>
 </div>
 
@@ -891,43 +946,8 @@ async function fetchRecipe() {
   }
 }
 
-const PRODUCE_DATA = [
-  {name:'사과', emoji:'🍎'},
-  {name:'딸기', emoji:'🍓'},
-  {name:'토마토', emoji:'🍅'},
-  {name:'배추', emoji:'🥬'},
-  {name:'감자', emoji:'🥔'},
-  {name:'당근', emoji:'🥕'},
-  {name:'오이', emoji:'🥒'},
-  {name:'양파', emoji:'🧅'},
-  {name:'무', emoji:'🫜'},
-  {name:'수박', emoji:'🍉'},
-  {name:'포도', emoji:'🍇'},
-  {name:'바나나', emoji:'🍌'},
-];
 const recipeCache = {};
 const prepCache = {};
-
-function initProduceLists() {
-  ['recipe','prep'].forEach(type => {
-    const el = document.getElementById(type === 'recipe' ? 'recipeList' : 'prepList');
-    const badge = type === 'recipe' ? '레시피 3개' : '세척·손질·보관';
-    const badgeCls = type === 'recipe' ? '' : 'blue';
-    el.innerHTML = PRODUCE_DATA.map((p, i) =>
-      '<div class="pitem-wrap" id="' + type + 'Wrap' + i + '">' +
-        '<div class="pitem" onclick="toggleProduceItem(\\'' + type + '\\',' + i + ',\\'' + p.name + '\\')">' +
-          '<span class="pitem-emo">' + p.emoji + '</span>' +
-          '<div class="pitem-info">' +
-            '<div class="pitem-name">' + p.name + '</div>' +
-            '<span class="pitem-badge ' + badgeCls + '">' + badge + '</span>' +
-          '</div>' +
-          '<span class="pitem-arrow">›</span>' +
-        '</div>' +
-        '<div class="pitem-detail" id="' + type + 'Detail' + i + '"></div>' +
-      '</div>'
-    ).join('');
-  });
-}
 
 async function toggleProduceItem(type, idx, name) {
   const wrap = document.getElementById(type + 'Wrap' + idx);
@@ -1044,6 +1064,8 @@ initProduceLists();
 </body>
 </html>"""
 
+html = html.replace('__RECIPE_LIST__', recipe_list_html)
+html = html.replace('__PREP_LIST__', prep_list_html)
 html = html.replace('__GROQ_KEY__', groq_key)
 html = html.replace('__GEMINI_KEY__', gemini_key)
 components.html(html, height=920, scrolling=False)

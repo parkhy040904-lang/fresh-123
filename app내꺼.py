@@ -214,7 +214,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .pitem-info{flex:1;}
 .pitem-name{font-size:14px;font-weight:800;color:#111;}
 .pitem-badge{display:inline-block;background:#43a047;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;margin-top:6px;letter-spacing:0.02em;}
-.pitem-badge.blue{background:#1976d2;color:#fff;}
+.pitem-badge.blue{background:#c8e6c9;color:#2d7a3a;}
 .pitem-arrow{color:#ccc;font-size:20px;font-weight:700;transition:transform 0.2s;flex-shrink:0;}
 .pitem-wrap.open .pitem-arrow{transform:rotate(90deg);}
 .pitem-detail{display:none;padding:12px;border-top:1px solid #f0f0f0;background:#f2f4f0;}
@@ -239,6 +239,23 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .rcstep-n{min-width:20px;height:20px;background:#3d6b3d;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;}
 .rctip{background:#fffbea;border-left:3px solid #f0c040;border-radius:0 8px 8px 0;padding:8px 12px;font-size:11px;color:#555;margin-top:8px;line-height:1.6;}
 .rctip strong{color:#b08800;}
+.psection{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.pstitle{font-size:13px;font-weight:800;color:#3d6b3d;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.pstep-list{list-style:none;margin:0;padding:0;}
+.pstep-list li{display:flex;gap:8px;margin-bottom:8px;font-size:12px;color:#333;line-height:1.55;padding-bottom:8px;border-bottom:1px solid #f5f5f5;}
+.pstep-list li:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.pstep-n{min-width:22px;height:22px;background:#eaf4ea;color:#3d6b3d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px;}
+.pcaution{background:#fdecea;border-radius:12px;padding:14px;margin-bottom:8px;}
+.pcaution-t{font-size:13px;font-weight:800;color:#c0392b;margin-bottom:8px;}
+.pcaution ul{list-style:none;padding:0;}
+.pcaution ul li{font-size:12px;color:#555;line-height:1.7;padding-left:12px;position:relative;margin-bottom:3px;}
+.pcaution ul li::before{content:'•';position:absolute;left:0;color:#c0392b;}
+.pstorage{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.psrow{display:flex;gap:8px;margin-bottom:10px;}
+.pschip{flex:1;background:#f5f5f5;border-radius:10px;padding:10px;text-align:center;}
+.psico{font-size:20px;margin-bottom:4px;}
+.psname{font-size:11px;color:#888;margin-bottom:2px;}
+.psdays{font-size:13px;font-weight:800;color:#3d6b3d;}
 </style>
 </head>
 <body>
@@ -1054,7 +1071,7 @@ async function loadPrepForProduce(name, idx, emoji) {
     body: JSON.stringify({
       model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       messages: [{role:'user', content:
-        name + '의 올바른 세척법, 손질법, 보관 방법을 알려주세요.\\n아래 형식으로만 답하고 다른 말은 절대 쓰지 마세요.\\n\\n세척법: (방법을 2~3문장으로)\\n손질법: (방법을 2~3문장으로)\\n보관법: (방법을 2~3문장으로)'
+        name + '의 손질법을 아래 형식으로만 답하고 다른 말은 절대 쓰지 마세요.\\n\\n세척법:\\n1. 단계\\n2. 단계\\n3. 단계\\n\\n손질법:\\n1. 단계\\n2. 단계\\n3. 단계\\n\\n주의사항:\\n• 주의사항1\\n• 주의사항2\\n\\n상온보관: (기간, 예: 3~5일)\\n냉장보관: (기간, 예: 2~4주)\\n냉동보관: (기간, 예: 6개월)\\n보관팁: (짧은 보관 팁 한 줄)'
       }]
     })
   });
@@ -1063,21 +1080,35 @@ async function loadPrepForProduce(name, idx, emoji) {
   const raw = json.choices[0].message.content.replace(/\\*+/g,'').replace(/#+/g,'').trim();
   const secs = {}; let ck = null;
   raw.split('\\n').forEach(line => {
-    const ci = line.indexOf(':');
-    const k = ci > -1 ? line.slice(0,ci).trim() : '';
-    const v = ci > -1 ? line.slice(ci+1).trim() : line.trim();
-    if (k.includes('세척')) { ck='wash'; secs[ck]=v; }
-    else if (k.includes('손질')) { ck='prep'; secs[ck]=v; }
-    else if (k.includes('보관')) { ck='store'; secs[ck]=v; }
-    else if (ck && line.trim()) secs[ck] += ' ' + line.trim();
+    const t = line.trim(); if (!t) return;
+    const ci = t.indexOf(':'); const k = ci>-1 ? t.slice(0,ci).trim() : ''; const v = ci>-1 ? t.slice(ci+1).trim() : '';
+    if (k.includes('세척')) { ck='wash'; secs[ck]=''; return; }
+    if (k.includes('손질')) { ck='prep'; secs[ck]=''; return; }
+    if (k.includes('주의')) { ck='caution'; secs[ck]=''; return; }
+    if (k.includes('상온')) { secs.room=v; ck=null; return; }
+    if (k.includes('냉장')) { secs.cold=v; ck=null; return; }
+    if (k.includes('냉동')) { secs.frozen=v; ck=null; return; }
+    if (k.includes('팁')) { secs.tip=v; ck=null; return; }
+    if (ck!==null) secs[ck]=(secs[ck]||'')+t+'\\n';
   });
-  const hdr = '<div class="rcipe-hdr"><span class="rhemo">'+(emoji||'🥬')+'</span><div><h3>'+name+' 손질법</h3><p>올바른 세척·손질·보관 방법</p></div></div>';
-  const mkCard = (ico, title, col, txt) =>
-    '<div class="rcipe-card">' +
-      '<div class="rctit">'+ico+' '+title+'</div>' +
-      '<div style="background:'+col+'15;border-radius:10px;padding:12px;font-size:12px;color:#333;line-height:1.75;">'+(txt||'—')+'</div>' +
-    '</div>';
-  const result = hdr + mkCard('🚿','세척법','#1976d2',secs.wash) + mkCard('🔪','손질법','#e65100',secs.prep) + mkCard('❄️','보관법','#00796b',secs.store);
+  const mkSteps = (ico, title, txt) => {
+    const items = (txt||'').split('\\n').filter(s=>s.trim())
+      .map((s,i)=>'<li><span class="pstep-n">'+(i+1)+'</span>'+s.replace(/^[\\d]+[.)\\s]+/,'')+'</li>').join('');
+    if (!items) return '';
+    return '<div class="psection"><div class="pstitle">'+ico+' '+title+'</div><ol class="pstep-list">'+items+'</ol></div>';
+  };
+  const cautionItems = (secs.caution||'').split('\\n').filter(s=>s.trim())
+    .map(s=>'<li>'+s.replace(/^[•·\\-]+\\s*/,'')+'</li>').join('');
+  const hdr = '<div class="rcipe-hdr"><span class="rhemo">'+(emoji||'🥬')+'</span><div><h3>'+name+' 손질법</h3><p>올바른 세척·손질·보관법 완벽 가이드</p></div></div>';
+  const result = hdr +
+    mkSteps('🚿','세척 방법',secs.wash) +
+    mkSteps('🔪','손질 방법',secs.prep) +
+    (cautionItems?'<div class="pcaution"><div class="pcaution-t">⚠️ 주의사항</div><ul>'+cautionItems+'</ul></div>':'') +
+    '<div class="pstorage"><div class="pstitle">📦 보관 기간</div><div class="psrow">'+
+      '<div class="pschip"><div class="psico">🌡️</div><div class="psname">상온</div><div class="psdays">'+(secs.room||'—')+'</div></div>'+
+      '<div class="pschip"><div class="psico">❄️</div><div class="psname">냉장</div><div class="psdays">'+(secs.cold||'—')+'</div></div>'+
+      '<div class="pschip"><div class="psico">🧊</div><div class="psname">냉동</div><div class="psdays">'+(secs.frozen||'—')+'</div></div>'+
+    '</div>'+(secs.tip?'<div class="rctip">💡 <strong>보관 팁:</strong> '+secs.tip+'</div>':'')+'</div>';
   prepCache[name] = result;
   document.getElementById('prepDetail' + idx).innerHTML = result;
 }

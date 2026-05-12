@@ -28,7 +28,7 @@ def make_produce_list(t):
     for i,(name,emoji) in enumerate(PRODUCE_DATA):
         rows.append(
             f'<div class="pitem-wrap" id="{t}Wrap{i}">'
-            f'<div class="pitem" onclick="toggleProduceItem(\'{t}\',{i},\'{name}\')">'
+            f'<div class="pitem" onclick="toggleProduceItem(\'{t}\',{i},\'{name}\',\'{emoji}\')">'
             f'<span class="pitem-emo">{emoji}</span>'
             f'<div class="pitem-info"><div class="pitem-name">{name}</div>'
             f'<span class="pitem-badge{bc}">{badge}</span></div>'
@@ -217,7 +217,28 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .pitem-badge.blue{background:#1976d2;color:#fff;}
 .pitem-arrow{color:#ccc;font-size:20px;font-weight:700;transition:transform 0.2s;flex-shrink:0;}
 .pitem-wrap.open .pitem-arrow{transform:rotate(90deg);}
-.pitem-detail{display:none;padding:12px 14px;border-top:1px solid #f0f0f0;background:#fafcfa;}
+.pitem-detail{display:none;padding:12px;border-top:1px solid #f0f0f0;background:#f2f4f0;}
+.rcipe-hdr{background:#3d6b3d;border-radius:12px;padding:14px 16px;color:#fff;display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.rcipe-hdr .rhemo{font-size:42px;flex-shrink:0;}
+.rcipe-hdr h3{font-size:15px;font-weight:800;margin:0;}
+.rcipe-hdr p{font-size:12px;opacity:.8;margin-top:3px;}
+.rcipe-card{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.rctit{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#111;margin-bottom:8px;flex-wrap:wrap;}
+.rctag{font-size:11px;background:#eaf4ea;color:#3d6b3d;border-radius:20px;padding:2px 8px;font-weight:700;}
+.rctag.o{background:#fff3e0;color:#e07b00;}
+.rcchips{display:flex;gap:6px;margin-bottom:10px;}
+.rcchip{background:#f5f5f5;border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;align-items:center;gap:1px;flex:1;}
+.chlbl{font-size:10px;color:#aaa;}
+.chval{font-weight:700;color:#222;font-size:11px;text-align:center;}
+.rcingr{background:#f9fbf9;border-radius:10px;padding:10px;margin-bottom:10px;}
+.ilbl{font-size:11px;font-weight:800;color:#3d6b3d;margin-bottom:6px;}
+.rcingr-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.rcingr-chips span{background:#fff;border:1px solid #dce8dc;border-radius:20px;padding:3px 9px;font-size:11px;color:#333;}
+.rcsteps{list-style:none;margin:0;padding:0;}
+.rcsteps li{display:flex;gap:8px;margin-bottom:7px;font-size:12px;color:#333;line-height:1.55;}
+.rcstep-n{min-width:20px;height:20px;background:#3d6b3d;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;}
+.rctip{background:#fffbea;border-left:3px solid #f0c040;border-radius:0 8px 8px 0;padding:8px 12px;font-size:11px;color:#555;margin-top:8px;line-height:1.6;}
+.rctip strong{color:#b08800;}
 </style>
 </head>
 <body>
@@ -947,7 +968,7 @@ async function fetchRecipe() {
 const recipeCache = {};
 const prepCache = {};
 
-async function toggleProduceItem(type, idx, name) {
+async function toggleProduceItem(type, idx, name, emoji) {
   const wrap = document.getElementById(type + 'Wrap' + idx);
   const detail = document.getElementById(type + 'Detail' + idx);
   const isOpen = wrap.classList.contains('open');
@@ -962,22 +983,21 @@ async function toggleProduceItem(type, idx, name) {
   if (cache[name]) { detail.innerHTML = cache[name]; return; }
   detail.innerHTML = '<div style="text-align:center;padding:14px;color:#aaa;font-size:12px;font-weight:700;">⏳ 불러오는 중...</div>';
   try {
-    if (type === 'recipe') await loadRecipeForProduce(name, idx);
-    else await loadPrepForProduce(name, idx);
+    if (type === 'recipe') await loadRecipeForProduce(name, idx, emoji);
+    else await loadPrepForProduce(name, idx, emoji);
   } catch(e) {
     detail.innerHTML = '<div style="color:#e53935;font-size:12px;font-weight:700;padding:8px;">오류: ' + e.message + '</div>';
   }
 }
 
-async function loadRecipeForProduce(name, idx) {
-  const detail = document.getElementById('recipeDetail' + idx);
+async function loadRecipeForProduce(name, idx, emoji) {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},
     body: JSON.stringify({
       model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       messages: [{role:'user', content:
-        '재료: ' + name + '\\n\\n이 재료가 주재료인 대중적이고 자주 해먹는 한국 가정식 요리 3가지 레시피를 알려주세요.\\n(예: 사과→사과잼·사과샐러드, 무→무국·깍두기, 딸기→딸기주스·딸기잼, 감자→감자볶음·감자조림·감자전, 배추→배추된장국·배추볶음)\\n주의: 장아찌·절임처럼 생소한 요리 말고, 집에서 자주 해먹는 친숙한 요리로만 추천하세요.\\n반드시 "---"으로 각 레시피를 구분하고 아래 형식으로만 답하세요. 다른 말은 절대 쓰지 마세요.\\n\\n요리이름: (실제 존재하는 요리명)\\n조리시간: (총 소요시간)\\n재료: (2인분 기준, 재료명+양 쉼표 나열)\\n조리법: (1. 단계 2. 단계 형식)\\n---'
+        '재료: ' + name + '\\n\\n이 재료가 주재료인 대중적이고 자주 해먹는 한국 가정식 요리 3가지 레시피를 알려주세요.\\n(예: 사과→사과잼·사과샐러드, 무→무국·깍두기, 딸기→딸기주스·딸기잼, 감자→감자볶음·감자조림·감자전, 배추→배추된장국·배추볶음)\\n주의: 장아찌·절임처럼 생소한 요리 말고, 집에서 자주 해먹는 친숙한 요리로만 추천하세요.\\n반드시 "---"으로 각 레시피를 구분하고 아래 형식으로만 답하세요. 다른 말은 절대 쓰지 마세요.\\n\\n요리이름: (이름)\\n난이도: (쉬움/보통/어려움 중 하나)\\n조리시간: (총 소요시간)\\n인분: (예: 2인분)\\n재료: (2인분 기준, 재료명+양 쉼표 나열)\\n조리법: (1. 단계 2. 단계 형식)\\n팁: (짧은 요리 팁 한 줄)\\n---'
       }]
     })
   });
@@ -992,29 +1012,42 @@ async function loadRecipeForProduce(name, idx) {
       const k = ci > -1 ? line.slice(0,ci).trim() : '';
       const v = ci > -1 ? line.slice(ci+1).trim() : line.trim();
       if (k.includes('이름')) { ck='name'; secs[ck]=v; }
+      else if (k.includes('난이도')) { ck='diff'; secs[ck]=v; }
       else if (k.includes('시간')) { ck='time'; secs[ck]=v; }
+      else if (k.includes('인분')) { ck='serv'; secs[ck]=v; }
       else if (k.includes('재료') && k.length < 10) { ck='ingr'; secs[ck]=v; }
       else if (k.includes('조리법')||k.includes('만드는')) { ck='steps'; secs[ck]=v; }
+      else if (k.includes('팁')) { ck='tip'; secs[ck]=v; }
       else if (ck && line.trim()) secs[ck] += '\\n' + line.trim();
     });
     if (!secs.name) return '';
-    const ingrHtml = (secs.ingr||'').split(/[,\\n]/).map(s=>s.trim()).filter(Boolean).map(s=>'• '+s).join('<br>');
-    const stepsHtml = (secs.steps||'').split('\\n').map(s=>s.trim()).filter(Boolean).join('<br>');
-    return '<div style="background:#f9fbf9;border-radius:10px;padding:12px;margin-bottom:8px;">' +
-      '<div style="font-size:13px;font-weight:900;color:#1b5e20;">' + (secs.name||'레시피') + '</div>' +
-      '<div style="font-size:10px;color:#aaa;font-weight:600;margin-bottom:8px;">⏱ ' + (secs.time||'—') + '</div>' +
-      '<div style="font-size:10px;font-weight:800;color:#e65100;margin-bottom:3px;">🛒 재료</div>' +
-      '<div style="font-size:11px;color:#555;font-weight:600;line-height:1.6;">' + ingrHtml + '</div>' +
-      '<div style="font-size:10px;font-weight:800;color:#e65100;margin-top:8px;margin-bottom:3px;">🍽️ 조리법</div>' +
-      '<div style="font-size:11px;color:#555;font-weight:600;line-height:1.6;">' + stepsHtml + '</div>' +
+    const ingrChips = (secs.ingr||'').split(/[,\\n]/).map(s=>s.trim()).filter(Boolean)
+      .map(s=>'<span>'+s+'</span>').join('');
+    const stepsHtml = (secs.steps||'').split('\\n').map(s=>s.trim()).filter(Boolean)
+      .map((s,i)=>'<li><span class="rcstep-n">'+(i+1)+'</span>'+s.replace(/^\\d+[.)\\s]*/,'')+'</li>').join('');
+    const diff = secs.diff||'보통';
+    const diffStar = diff.includes('어려') ? '⭐⭐⭐' : diff.includes('보통') ? '⭐⭐' : '⭐';
+    return '<div class="rcipe-card">' +
+      '<div class="rctit">'+secs.name+
+        '<span class="rctag">'+diff+'</span>'+
+        '<span class="rctag o">'+(secs.time||'—')+'</span></div>' +
+      '<div class="rcchips">' +
+        '<div class="rcchip"><span class="chlbl">난이도</span><span class="chval">'+diffStar+' '+diff+'</span></div>' +
+        '<div class="rcchip"><span class="chlbl">시간</span><span class="chval">'+(secs.time||'—')+'</span></div>' +
+        '<div class="rcchip"><span class="chlbl">인분</span><span class="chval">'+(secs.serv||'2인분')+'</span></div>' +
+      '</div>' +
+      '<div class="rcingr"><div class="ilbl">🛒 재료</div><div class="rcingr-chips">'+ingrChips+'</div></div>' +
+      '<ul class="rcsteps">'+stepsHtml+'</ul>' +
+      (secs.tip ? '<div class="rctip">💡 <strong>팁:</strong> '+secs.tip+'</div>' : '') +
       '</div>';
   }).join('');
-  const result = recipesHtml || '<div style="color:#aaa;font-size:12px;padding:8px;">레시피를 불러오지 못했어요.</div>';
+  const hdr = '<div class="rcipe-hdr"><span class="rhemo">'+(emoji||'🥬')+'</span><div><h3>'+name+' 레시피</h3><p>'+name+'로 만드는 맛있는 요리들</p></div></div>';
+  const result = hdr + (recipesHtml || '<div style="color:#aaa;font-size:12px;padding:8px;">레시피를 불러오지 못했어요.</div>');
   recipeCache[name] = result;
   document.getElementById('recipeDetail' + idx).innerHTML = result;
 }
 
-async function loadPrepForProduce(name, idx) {
+async function loadPrepForProduce(name, idx, emoji) {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},
@@ -1038,12 +1071,13 @@ async function loadPrepForProduce(name, idx) {
     else if (k.includes('보관')) { ck='store'; secs[ck]=v; }
     else if (ck && line.trim()) secs[ck] += ' ' + line.trim();
   });
-  const mkBlock = (ico, lbl, col, txt) =>
-    '<div style="background:' + col + '18;border-radius:10px;padding:10px 12px;margin-bottom:8px;">' +
-      '<div style="font-size:10px;font-weight:800;color:' + col + ';margin-bottom:4px;">' + ico + ' ' + lbl + '</div>' +
-      '<div style="font-size:11px;color:#444;font-weight:600;line-height:1.65;">' + (txt||'—') + '</div>' +
+  const hdr = '<div class="rcipe-hdr"><span class="rhemo">'+(emoji||'🥬')+'</span><div><h3>'+name+' 손질법</h3><p>올바른 세척·손질·보관 방법</p></div></div>';
+  const mkCard = (ico, title, col, txt) =>
+    '<div class="rcipe-card">' +
+      '<div class="rctit">'+ico+' '+title+'</div>' +
+      '<div style="background:'+col+'15;border-radius:10px;padding:12px;font-size:12px;color:#333;line-height:1.75;">'+(txt||'—')+'</div>' +
     '</div>';
-  const result = mkBlock('🚿','세척법','#1976d2',secs.wash) + mkBlock('🔪','손질법','#e65100',secs.prep) + mkBlock('❄️','보관법','#00796b',secs.store);
+  const result = hdr + mkCard('🚿','세척법','#1976d2',secs.wash) + mkCard('🔪','손질법','#e65100',secs.prep) + mkCard('❄️','보관법','#00796b',secs.store);
   prepCache[name] = result;
   document.getElementById('prepDetail' + idx).innerHTML = result;
 }

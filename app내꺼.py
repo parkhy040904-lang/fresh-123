@@ -170,6 +170,31 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .gdetail .ok{color:#2d7a3a;font-weight:800;}
 .gdetail .no{color:#c62828;font-weight:800;}
 .gc.open .gdetail{display:block;}
+
+.pages{flex:1;position:relative;overflow:hidden;}
+.page{position:absolute;inset:0;display:none;flex-direction:column;}
+.page.active{display:flex;}
+.bnav{background:#fff;border-top:1px solid #ebebeb;display:flex;flex-shrink:0;height:58px;}
+.bnav-btn{flex:1;border:none;background:transparent;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;cursor:pointer;
+  font-family:'Nunito',sans-serif;color:#bbb;font-size:10px;font-weight:800;}
+.bnav-btn.active{color:#2d7a3a;}
+.bnav-ico{font-size:20px;line-height:1;}
+.tab-hdr{padding:16px 20px;flex-shrink:0;background:linear-gradient(135deg,#1b5e20,#388e3c);}
+.tab-hdr-title{font-size:20px;font-weight:900;color:#fff;}
+.tab-hdr-sub{color:rgba(255,255,255,0.75);font-size:12px;font-weight:600;margin-top:3px;}
+.plist{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.pitem-wrap{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.pitem{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background 0.15s;}
+.pitem:active{background:#f5f5f5;}
+.pitem-emo{font-size:32px;flex-shrink:0;}
+.pitem-info{flex:1;}
+.pitem-name{font-size:14px;font-weight:800;color:#111;}
+.pitem-badge{display:inline-block;background:#e8f5e9;color:#2d7a3a;font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px;margin-top:3px;}
+.pitem-badge.blue{background:#e3f2fd;color:#1565c0;}
+.pitem-arrow{color:#ccc;font-size:20px;font-weight:700;transition:transform 0.2s;flex-shrink:0;}
+.pitem-wrap.open .pitem-arrow{transform:rotate(90deg);}
+.pitem-detail{display:none;padding:12px 14px;border-top:1px solid #f0f0f0;background:#fafcfa;}
 </style>
 </head>
 <body>
@@ -181,6 +206,8 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
     <span>●●● WiFi 🔋</span>
   </div>
 
+  <div class="pages">
+  <div id="pageHome" class="page active">
   <div class="hdr">
     <div class="hdr-top">
       <div class="logo">Scan Eat<em>!</em></div>
@@ -510,6 +537,7 @@ function showResult(produce, score, colorScore, textureScore, status, desc, stor
   document.getElementById('btnRow').style.display = 'flex';
   shownRecipes = [];
   lastResult = {produce, score, colorScore, textureScore, desc};
+  compareCachedHTML = null;
   if (compareStream) stopCompareCam(null);
   document.getElementById('cbox').style.display = 'none';
   document.getElementById('comparePreview').style.display = 'none';
@@ -862,6 +890,156 @@ async function fetchRecipe() {
     rbox2.innerHTML = '<div style="text-align:center;padding:20px;color:#e53935;font-size:13px;font-weight:700;">오류: ' + err.message + '</div>';
   }
 }
+
+const PRODUCE_DATA = [
+  {name:'사과', emoji:'🍎'},
+  {name:'딸기', emoji:'🍓'},
+  {name:'토마토', emoji:'🍅'},
+  {name:'배추', emoji:'🥬'},
+  {name:'감자', emoji:'🥔'},
+  {name:'당근', emoji:'🥕'},
+  {name:'오이', emoji:'🥒'},
+  {name:'양파', emoji:'🧅'},
+  {name:'무', emoji:'🫜'},
+  {name:'수박', emoji:'🍉'},
+  {name:'포도', emoji:'🍇'},
+  {name:'바나나', emoji:'🍌'},
+];
+const recipeCache = {};
+const prepCache = {};
+
+function initProduceLists() {
+  ['recipe','prep'].forEach(type => {
+    const el = document.getElementById(type === 'recipe' ? 'recipeList' : 'prepList');
+    const badge = type === 'recipe' ? '레시피 3개' : '세척·손질·보관';
+    const badgeCls = type === 'recipe' ? '' : 'blue';
+    el.innerHTML = PRODUCE_DATA.map((p, i) =>
+      '<div class="pitem-wrap" id="' + type + 'Wrap' + i + '">' +
+        '<div class="pitem" onclick="toggleProduceItem(\\'' + type + '\\',' + i + ',\\'' + p.name + '\\')">' +
+          '<span class="pitem-emo">' + p.emoji + '</span>' +
+          '<div class="pitem-info">' +
+            '<div class="pitem-name">' + p.name + '</div>' +
+            '<span class="pitem-badge ' + badgeCls + '">' + badge + '</span>' +
+          '</div>' +
+          '<span class="pitem-arrow">›</span>' +
+        '</div>' +
+        '<div class="pitem-detail" id="' + type + 'Detail' + i + '"></div>' +
+      '</div>'
+    ).join('');
+  });
+}
+
+async function toggleProduceItem(type, idx, name) {
+  const wrap = document.getElementById(type + 'Wrap' + idx);
+  const detail = document.getElementById(type + 'Detail' + idx);
+  const isOpen = wrap.classList.contains('open');
+  document.querySelectorAll('#' + (type === 'recipe' ? 'recipeList' : 'prepList') + ' .pitem-wrap.open').forEach(el => {
+    el.classList.remove('open');
+    el.querySelector('.pitem-detail').style.display = 'none';
+  });
+  if (isOpen) return;
+  wrap.classList.add('open');
+  detail.style.display = 'block';
+  const cache = type === 'recipe' ? recipeCache : prepCache;
+  if (cache[name]) { detail.innerHTML = cache[name]; return; }
+  detail.innerHTML = '<div style="text-align:center;padding:14px;color:#aaa;font-size:12px;font-weight:700;">⏳ 불러오는 중...</div>';
+  try {
+    if (type === 'recipe') await loadRecipeForProduce(name, idx);
+    else await loadPrepForProduce(name, idx);
+  } catch(e) {
+    detail.innerHTML = '<div style="color:#e53935;font-size:12px;font-weight:700;padding:8px;">오류: ' + e.message + '</div>';
+  }
+}
+
+async function loadRecipeForProduce(name, idx) {
+  const detail = document.getElementById('recipeDetail' + idx);
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      messages: [{role:'user', content:
+        '재료: ' + name + '\\n\\n이 재료가 원래부터 들어가는 잘 알려진 요리의 레시피 3개를 알려주세요.\\n반드시 "---"으로 각 레시피를 구분하고 아래 형식으로만 답하세요. 다른 말은 절대 쓰지 마세요.\\n\\n요리이름: (실제 존재하는 요리명)\\n조리시간: (총 소요시간)\\n재료: (2인분 기준, 재료명+양 쉼표 나열)\\n조리법: (1. 단계 2. 단계 형식)\\n---'
+      }]
+    })
+  });
+  if (!res.ok) throw new Error('API ' + res.status);
+  const json = await res.json();
+  const raw = json.choices[0].message.content.replace(/\\*+/g,'').replace(/#+/g,'').trim();
+  const blocks = raw.split(/---+/).filter(b => b.trim());
+  const recipesHtml = blocks.slice(0, 3).map(block => {
+    const secs = {}; let ck = null;
+    block.trim().split('\\n').forEach(line => {
+      const ci = line.indexOf(':');
+      const k = ci > -1 ? line.slice(0,ci).trim() : '';
+      const v = ci > -1 ? line.slice(ci+1).trim() : line.trim();
+      if (k.includes('이름')) { ck='name'; secs[ck]=v; }
+      else if (k.includes('시간')) { ck='time'; secs[ck]=v; }
+      else if (k.includes('재료') && k.length < 10) { ck='ingr'; secs[ck]=v; }
+      else if (k.includes('조리법')||k.includes('만드는')) { ck='steps'; secs[ck]=v; }
+      else if (ck && line.trim()) secs[ck] += '\\n' + line.trim();
+    });
+    if (!secs.name) return '';
+    const ingrHtml = (secs.ingr||'').split(/[,\\n]/).map(s=>s.trim()).filter(Boolean).map(s=>'• '+s).join('<br>');
+    const stepsHtml = (secs.steps||'').split('\\n').map(s=>s.trim()).filter(Boolean).join('<br>');
+    return '<div style="background:#f9fbf9;border-radius:10px;padding:12px;margin-bottom:8px;">' +
+      '<div style="font-size:13px;font-weight:900;color:#1b5e20;">' + (secs.name||'레시피') + '</div>' +
+      '<div style="font-size:10px;color:#aaa;font-weight:600;margin-bottom:8px;">⏱ ' + (secs.time||'—') + '</div>' +
+      '<div style="font-size:10px;font-weight:800;color:#e65100;margin-bottom:3px;">🛒 재료</div>' +
+      '<div style="font-size:11px;color:#555;font-weight:600;line-height:1.6;">' + ingrHtml + '</div>' +
+      '<div style="font-size:10px;font-weight:800;color:#e65100;margin-top:8px;margin-bottom:3px;">🍽️ 조리법</div>' +
+      '<div style="font-size:11px;color:#555;font-weight:600;line-height:1.6;">' + stepsHtml + '</div>' +
+      '</div>';
+  }).join('');
+  const result = recipesHtml || '<div style="color:#aaa;font-size:12px;padding:8px;">레시피를 불러오지 못했어요.</div>';
+  recipeCache[name] = result;
+  document.getElementById('recipeDetail' + idx).innerHTML = result;
+}
+
+async function loadPrepForProduce(name, idx) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      messages: [{role:'user', content:
+        name + '의 올바른 세척법, 손질법, 보관 방법을 알려주세요.\\n아래 형식으로만 답하고 다른 말은 절대 쓰지 마세요.\\n\\n세척법: (방법을 2~3문장으로)\\n손질법: (방법을 2~3문장으로)\\n보관법: (방법을 2~3문장으로)'
+      }]
+    })
+  });
+  if (!res.ok) throw new Error('API ' + res.status);
+  const json = await res.json();
+  const raw = json.choices[0].message.content.replace(/\\*+/g,'').replace(/#+/g,'').trim();
+  const secs = {}; let ck = null;
+  raw.split('\\n').forEach(line => {
+    const ci = line.indexOf(':');
+    const k = ci > -1 ? line.slice(0,ci).trim() : '';
+    const v = ci > -1 ? line.slice(ci+1).trim() : line.trim();
+    if (k.includes('세척')) { ck='wash'; secs[ck]=v; }
+    else if (k.includes('손질')) { ck='prep'; secs[ck]=v; }
+    else if (k.includes('보관')) { ck='store'; secs[ck]=v; }
+    else if (ck && line.trim()) secs[ck] += ' ' + line.trim();
+  });
+  const mkBlock = (ico, lbl, col, txt) =>
+    '<div style="background:' + col + '18;border-radius:10px;padding:10px 12px;margin-bottom:8px;">' +
+      '<div style="font-size:10px;font-weight:800;color:' + col + ';margin-bottom:4px;">' + ico + ' ' + lbl + '</div>' +
+      '<div style="font-size:11px;color:#444;font-weight:600;line-height:1.65;">' + (txt||'—') + '</div>' +
+    '</div>';
+  const result = mkBlock('🚿','세척법','#1976d2',secs.wash) + mkBlock('🔪','손질법','#e65100',secs.prep) + mkBlock('❄️','보관법','#00796b',secs.store);
+  prepCache[name] = result;
+  document.getElementById('prepDetail' + idx).innerHTML = result;
+}
+
+function showPage(page) {
+  const map = {home:'pageHome', recipe:'pageRecipe', prep:'pagePrep'};
+  const btnMap = {home:'btnHome', recipe:'btnRecipe', prep:'btnPrep'};
+  Object.values(map).forEach(id => document.getElementById(id).classList.remove('active'));
+  Object.values(btnMap).forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById(map[page]).classList.add('active');
+  document.getElementById(btnMap[page]).classList.add('active');
+}
+
+initProduceLists();
 </script>
 </body>
 </html>"""

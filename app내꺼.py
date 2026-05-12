@@ -698,6 +698,12 @@ async function analyzeCompare() {
   const imgEl = document.getElementById('compareImg');
   if (!imgEl.src || imgEl.src === '') { alert('사진을 먼저 선택해주세요!'); return; }
   const resultEl = document.getElementById('compareResult');
+  if (compareCachedHTML) {
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = compareCachedHTML;
+    resultEl.scrollIntoView({behavior:'smooth', block:'nearest'});
+    return;
+  }
   resultEl.style.display = 'block';
   resultEl.innerHTML = '<div style="text-align:center;padding:16px;color:#aaa;font-size:13px;font-weight:700;">⏳ 분석 중...</div>';
   try {
@@ -768,13 +774,13 @@ async function analyzeCompare() {
     resultEl.innerHTML =
       '<div class="cmp-grid">' +
         '<div class="cmp-card' + (aWins || tie ? ' winner' : '') + '">' +
-          (aWins ? '<div class="cmp-badge">✅ 추천</div>' : '') +
+          (aWins && !tie ? '<div class="cmp-badge">✅ 추천</div>' : '') +
           '<div class="cmp-label">A (처음 것)</div>' +
           '<div class="cmp-name">' + lastResult.produce + '</div>' +
           '<div class="cmp-score" style="color:' + scoreColor(lastResult.score) + '">' + lastResult.score + '</div>' +
         '</div>' +
         '<div class="cmp-card' + (!aWins || tie ? ' winner' : '') + '">' +
-          (!aWins ? '<div class="cmp-badge">✅ 추천</div>' : '') +
+          (!aWins && !tie ? '<div class="cmp-badge">✅ 추천</div>' : '') +
           '<div class="cmp-label">B (비교 것)</div>' +
           '<div class="cmp-name">' + bProduce + '</div>' +
           '<div class="cmp-score" style="color:' + scoreColor(bScore.toFixed(1)) + '">' + bScore.toFixed(1) + '</div>' +

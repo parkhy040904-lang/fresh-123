@@ -4,7 +4,6 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Scan Eat!", page_icon="🌿", layout="wide")
 
 groq_key = st.secrets["GROQ_API_KEY"]
-gemini_key = st.secrets["GEMINI_API_KEY"]
 
 st.markdown("""
 <style>
@@ -211,11 +210,11 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .pitem-wrap{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
 .pitem{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background 0.15s;}
 .pitem:active{background:#f5f5f5;}
-.pitem-emo{font-size:32px;flex-shrink:0;}
+.pitem-emo{font-size:36px;flex-shrink:0;}
 .pitem-info{flex:1;}
 .pitem-name{font-size:14px;font-weight:800;color:#111;}
-.pitem-badge{display:inline-block;background:#e8f5e9;color:#2d7a3a;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;margin-top:5px;letter-spacing:0.01em;}
-.pitem-badge.blue{background:#e3f2fd;color:#1565c0;}
+.pitem-badge{display:inline-block;background:#43a047;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;margin-top:6px;letter-spacing:0.02em;}
+.pitem-badge.blue{background:#1976d2;color:#fff;}
 .pitem-arrow{color:#ccc;font-size:20px;font-weight:700;transition:transform 0.2s;flex-shrink:0;}
 .pitem-wrap.open .pitem-arrow{transform:rotate(90deg);}
 .pitem-detail{display:none;padding:12px 14px;border-top:1px solid #f0f0f0;background:#fafcfa;}
@@ -454,7 +453,6 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 
 <script>
 const GROQ_API_KEY = '__GROQ_KEY__';
-const GEMINI_API_KEY = '__GEMINI_KEY__';
 let stream = null;
 let facingMode = 'environment';
 let shownRecipes = [];
@@ -1066,5 +1064,4 @@ function showPage(page) {
 html = html.replace('__RECIPE_LIST__', recipe_list_html)
 html = html.replace('__PREP_LIST__', prep_list_html)
 html = html.replace('__GROQ_KEY__', groq_key)
-html = html.replace('__GEMINI_KEY__', gemini_key)
 components.html(html, height=920, scrolling=False)

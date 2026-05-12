@@ -379,6 +379,7 @@ let shownRecipes = [];
 let lastResult = null;
 let compareStream = null;
 let compareFacingMode = 'environment';
+let compareCachedHTML = null;
 
 function updateClock() {
   const now = new Date();
@@ -536,7 +537,7 @@ async function analyze(src) {
             role: 'user',
             content: [
               {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + base64}},
-              {type: 'text', text: '사진 속 농산물의 신선도를 아래 규칙에 따라 엄격하게 채점하세요.\\n\\n[필수 관찰 항목]\\n① 검은 반점·갈색 부패 부위가 있는가?\\n② 곰팡이(흰색/회색/검은색 가루·솜털)가 있는가?\\n③ 껍질이 주름지거나 물러진 부위가 있는가?\\n④ 표면이 균열되거나 즙이 새는가?\\n\\n[채점 규칙 - 절대 준수]\\n• ①~④ 중 하나라도 해당하면 → 종합 점수 4점 이하\\n• 검은 반점이나 곰팡이가 명확히 보이면 → 종합 점수 2점 이하\\n• 곰팡이가 광범위하거나 악취 등 심각한 부패면 → 종합 점수 1점 이하\\n• 사진에 신선한 것과 상한 것이 섞여 있으면 → 가장 상한 것 기준으로 채점\\n• 전체가 완벽히 신선할 때만 8점 이상 가능\\n\\n[점수 기준]\\n8~10: 흠집 전혀 없이 완벽히 신선, 바로 섭취 가능\\n6~7: 아주 작은 흠집, 2~3일 내 섭취 권장\\n4~5: 변색·이상 있으나 오늘~내일 섭취 가능\\n2~3: 부패 일부, 섭취 위험\\n0~1: 곰팡이·광범위 부패, 즉시 폐기\\n\\n[출력 형식 - 이것만 출력, 다른 말 금지]\\n농산물 종류: (이름)\\n색상 점수: (0.0~10.0)\\n외관 점수: (0.0~10.0)\\n종합 신선도 점수: (0.0~10.0)\\n상태: (신선/보통/주의/부패 중 하나)\\n상태 설명: (관찰한 특징 포함해서 두 문장)\\n보관 방법: (구체적 온도·방법)\\n예상 남은 기한: (기간)'}
+              {type: 'text', text: '사진 속 농산물의 신선도를 아래 규칙에 따라 엄격하게 채점하세요.\\n\\n[필수 관찰 항목]\\n① 검은 반점·갈색 부패 부위가 있는가?\\n② 곰팡이(흰색/회색/검은색 가루·솜털)가 있는가?\\n③ 껍질이 주름지거나 물러진 부위가 있는가?\\n④ 표면이 균열되거나 즙이 새는가?\\n\\n[채점 규칙 - 절대 준수]\\n• ①~④ 중 하나라도 해당하면 → 종합 점수 4점 이하\\n• 검은 반점이나 곰팡이가 명확히 보이면 → 종합 점수 2점 이하\\n• 곰팡이가 광범위하거나 악취 등 심각한 부패면 → 종합 점수 1점 이하\\n• 사진에 신선한 것과 상한 것이 섞여 있으면 → 가장 상한 것 기준으로 채점\\n• 전체가 완벽히 신선할 때만 8점 이상 가능\\n\\n[점수 기준]\\n8~10: 흠집 전혀 없이 완벽히 신선, 바로 섭취 가능\\n6~7: 아주 작은 흠집, 2~3일 내 섭취 권장\\n4~5: 변색·이상 있으나 오늘~내일 섭취 가능\\n2~3: 부패 일부, 섭취 위험\\n0~1: 곰팡이·광범위 부패, 즉시 폐기\\n\\n[중요] 모든 점수는 반드시 소수점 첫째 자리까지 작성 (예: 8.0 금지, 7.5 또는 8.3처럼)\\n\\n[출력 형식 - 이것만 출력, 다른 말 금지]\\n농산물 종류: (이름)\\n색상 점수: (0.0~10.0, 소수점 필수)\\n외관 점수: (0.0~10.0, 소수점 필수)\\n종합 신선도 점수: (0.0~10.0, 소수점 필수)\\n상태: (신선/보통/주의/부패 중 하나)\\n상태 설명: (관찰한 특징 포함해서 두 문장)\\n보관 방법: (구체적 온도·방법)\\n예상 남은 기한: (기간)'}
             ]
           }]
         })
@@ -677,6 +678,7 @@ function shootCompare(e) {
   document.getElementById('compareImg').src = url;
   document.getElementById('comparePreview').style.display = 'block';
   document.getElementById('compareResult').style.display = 'none';
+  compareCachedHTML = null;
 }
 
 function loadCompareFile(e) {
@@ -687,6 +689,7 @@ function loadCompareFile(e) {
     document.getElementById('compareImg').src = ev.target.result;
     document.getElementById('comparePreview').style.display = 'block';
     document.getElementById('compareResult').style.display = 'none';
+    compareCachedHTML = null;
   };
   reader.readAsDataURL(file);
 }
@@ -709,7 +712,7 @@ async function analyzeCompare() {
           role: 'user',
           content: [
             {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + base64}},
-            {type: 'text', text: '사진 속 농산물의 신선도를 아래 규칙에 따라 엄격하게 채점하세요.\\n\\n[필수 관찰 항목]\\n① 검은 반점·갈색 부패 부위가 있는가?\\n② 곰팡이(흰색/회색/검은색 가루·솜털)가 있는가?\\n③ 껍질이 주름지거나 물러진 부위가 있는가?\\n④ 표면이 균열되거나 즙이 새는가?\\n\\n[채점 규칙 - 절대 준수]\\n• ①~④ 중 하나라도 해당하면 → 종합 점수 4점 이하\\n• 검은 반점이나 곰팡이가 명확히 보이면 → 종합 점수 2점 이하\\n• 곰팡이가 광범위하거나 악취 등 심각한 부패면 → 종합 점수 1점 이하\\n• 사진에 신선한 것과 상한 것이 섞여 있으면 → 가장 상한 것 기준으로 채점\\n• 전체가 완벽히 신선할 때만 8점 이상 가능\\n\\n[점수 기준]\\n8~10: 완벽히 신선\\n6~7: 아주 작은 흠집\\n4~5: 변색·이상 있음\\n2~3: 부패 일부\\n0~1: 곰팡이·광범위 부패\\n\\n[출력 형식 - 이것만 출력]\\n농산물 종류: (이름)\\n종합 신선도 점수: (0.0~10.0)\\n상태: (신선/보통/주의/부패 중 하나)\\n상태 설명: (한 문장)'}
+            {type: 'text', text: '사진 속 농산물의 신선도를 아래 규칙에 따라 엄격하게 채점하세요.\\n\\n[필수 관찰 항목]\\n① 검은 반점·갈색 부패 부위가 있는가?\\n② 곰팡이(흰색/회색/검은색 가루·솜털)가 있는가?\\n③ 껍질이 주름지거나 물러진 부위가 있는가?\\n④ 표면이 균열되거나 즙이 새는가?\\n\\n[채점 규칙 - 절대 준수]\\n• ①~④ 중 하나라도 해당하면 → 종합 점수 4점 이하\\n• 검은 반점이나 곰팡이가 명확히 보이면 → 종합 점수 2점 이하\\n• 곰팡이가 광범위하거나 악취 등 심각한 부패면 → 종합 점수 1점 이하\\n• 사진에 신선한 것과 상한 것이 섞여 있으면 → 가장 상한 것 기준으로 채점\\n• 전체가 완벽히 신선할 때만 8점 이상 가능\\n\\n[점수 기준]\\n8~10: 완벽히 신선\\n6~7: 아주 작은 흠집\\n4~5: 변색·이상 있음\\n2~3: 부패 일부\\n0~1: 곰팡이·광범위 부패\\n\\n[중요] 점수는 반드시 소수점 첫째 자리까지 작성 (예: 7.5, 8.3)\\n\\n[출력 형식 - 이것만 출력]\\n농산물 종류: (이름)\\n종합 신선도 점수: (0.0~10.0, 소수점 필수)\\n상태 설명: (부패·이상 여부 포함 한 문장)'}
           ]
         }]
       })
@@ -721,7 +724,6 @@ async function analyzeCompare() {
       {key:'농산물 종류', kws:['농산물','종류','채소','작물','식품']},
       {key:'종합 신선도 점수', kws:['종합','신선도 점수']},
       {key:'상태 설명', kws:['상태 설명','설명']},
-      {key:'상태', kws:['상태']},
     ];
     const sections = {}; let curSec = null;
     for (const line of raw.split('\\n')) {
@@ -733,18 +735,17 @@ async function analyzeCompare() {
       else if (curSec && line.trim()) sections[curSec] += ' ' + line.trim();
     }
     const parseScore = r => { const m = (r||'').match(/([\d.]+)/); return m ? parseFloat(m[1]).toFixed(1) : '5.0'; };
-    const bProduce  = sections['농산물 종류'] || '농산물';
-    const bDesc     = sections['상태 설명'] || '';
-    const bStatus   = sections['상태'] || '보통';
+    const bProduce = sections['농산물 종류'] || '농산물';
+    const bDesc    = sections['상태 설명'] || '';
     let bs = parseFloat(parseScore(sections['종합 신선도 점수']));
     const bNegWords = ['없','않','전혀','아닌','안 '];
-    const bSents = (bDesc + ' ' + bStatus).split(/[.!?\\n。]/);
+    const bSents = bDesc.split(/[.!?\\n。]/);
     const bHasBad = (words) => bSents.some(sent =>
       words.some(w => sent.includes(w)) && !bNegWords.some(neg => sent.includes(neg))
     );
     if (bHasBad(['곰팡이','악취'])) bs = Math.min(bs, 1.9);
-    else if (bHasBad(['부패','썩','검은 반점','검은반점','흑변']) || bStatus === '부패') bs = Math.min(bs, 2.9);
-    else if (bStatus === '주의' || bHasBad(['물러','주름','변색','균열','상함','상해'])) bs = Math.min(bs, 4.9);
+    else if (bHasBad(['부패','썩','검은 반점','검은반점','흑변'])) bs = Math.min(bs, 2.9);
+    else if (bHasBad(['물러','주름','변색','균열','상함','상해'])) bs = Math.min(bs, 4.9);
     const bScore = bs;
     const aProduce = lastResult.produce;
     if (!aProduce.includes(bProduce) && !bProduce.includes(aProduce)) {
@@ -780,6 +781,7 @@ async function analyzeCompare() {
         '</div>' +
       '</div>' +
       '<div style="background:#f5f5f5;border-radius:12px;padding:10px 12px;margin-top:10px;font-size:12px;font-weight:700;color:#333;text-align:center;">' + summary + '</div>';
+    compareCachedHTML = resultEl.innerHTML;
     resultEl.scrollIntoView({behavior:'smooth', block:'nearest'});
   } catch(err) {
     resultEl.innerHTML = '<div style="text-align:center;padding:16px;color:#e53935;font-size:13px;font-weight:700;">오류: ' + err.message + '</div>';

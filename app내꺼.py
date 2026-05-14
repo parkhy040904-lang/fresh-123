@@ -256,6 +256,38 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .psico{font-size:20px;margin-bottom:4px;}
 .psname{font-size:11px;color:#888;margin-bottom:2px;}
 .psdays{font-size:13px;font-weight:800;color:#3d6b3d;}
+
+.fav-btn{width:100%;margin-top:8px;padding:11px;background:#fff;border:2px solid #4caf50;border-radius:16px;color:#2d7a3a;font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;transition:all 0.2s;}
+.fav-btn.saved{background:#e8f5e9;border-color:#2e7d32;color:#1b5e20;}
+.fav-btn:active{transform:scale(0.97);}
+.hist-empty{text-align:center;padding:48px 20px;color:#aaa;}
+.hist-empty-ico{font-size:48px;margin-bottom:12px;}
+.hist-empty-t{font-size:14px;font-weight:800;color:#bbb;}
+.hist-empty-s{font-size:12px;margin-top:6px;font-weight:600;}
+.hist-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);flex-shrink:0;}
+.hist-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.hist-emo{font-size:32px;flex-shrink:0;}
+.hist-info{flex:1;}
+.hist-name{font-size:14px;font-weight:800;color:#111;}
+.hist-date{font-size:11px;color:#aaa;font-weight:600;margin-top:2px;}
+.hist-score{font-size:22px;font-weight:900;}
+.hist-rescan{padding:9px 16px;background:linear-gradient(135deg,#2d7a3a,#4caf50);border:none;border-radius:12px;color:#fff;font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;}
+.hist-rescan:active{opacity:0.85;}
+.hist-delete{padding:9px 12px;background:#f5f5f5;border:none;border-radius:12px;color:#aaa;font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-left:6px;}
+.rescan-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.55);z-index:50;display:none;flex-direction:column;border-radius:50px;overflow:hidden;}
+.rescan-overlay.open{display:flex;}
+.rescan-sheet{background:#f7faf7;border-radius:28px 28px 0 0;margin-top:auto;padding:20px 18px 28px;max-height:88%;overflow-y:auto;}
+.rescan-sheet::-webkit-scrollbar{display:none;}
+.htimeline{display:flex;align-items:flex-start;gap:0;margin:12px 0 14px;}
+.htl-node{flex:0;text-align:center;min-width:64px;}
+.htl-circle{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;margin:0 auto;}
+.htl-label{font-size:10px;font-weight:700;color:#aaa;margin-top:5px;}
+.htl-line{flex:1;height:3px;background:#eee;margin-top:24px;}
+.hstats-row{display:flex;gap:8px;margin-bottom:8px;}
+.hstat{flex:1;background:#f7f7f7;border-radius:12px;padding:10px;text-align:center;}
+.hstat-label{font-size:10px;color:#aaa;font-weight:700;}
+.hstat-val{font-size:15px;font-weight:900;color:#222;margin-top:3px;}
+.hai-comment{background:#fffbea;border-left:3px solid #f0c040;border-radius:0 10px 10px 0;padding:10px 12px;font-size:12px;color:#555;line-height:1.65;margin-top:8px;}
 </style>
 </head>
 <body>
@@ -339,6 +371,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
           <button class="recipe-btn" id="recipeBtn" onclick="fetchRecipe()">🍳 레시피 보기</button>
           <button class="compare-btn" onclick="startCompare()">📊 비교하기</button>
         </div>
+        <button class="fav-btn" id="favBtn" onclick="toggleFav()">⭐ 찜하기</button>
       </div>
       <div class="rbox2" id="rbox2"></div>
       <div class="cbox" id="cbox">
@@ -474,6 +507,14 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
     <div class="scroll plist" id="prepList">__PREP_LIST__</div>
   </div>
 
+  <div id="pageHistory" class="page">
+    <div class="tab-hdr">
+      <div class="tab-hdr-title">📋 히스토리</div>
+      <div class="tab-hdr-sub">찜한 농산물의 신선도 변화를 추적하세요</div>
+    </div>
+    <div class="scroll plist" id="histList"></div>
+  </div>
+
   </div><!-- /pages -->
 
   <div class="bnav">
@@ -486,6 +527,54 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
     <button class="bnav-btn" id="btnPrep" onclick="showPage('prep')">
       <span class="bnav-ico">🔪</span><span>손질법</span>
     </button>
+    <button class="bnav-btn" id="btnHistory" onclick="showPage('history')">
+      <span class="bnav-ico">📋</span><span>히스토리</span>
+    </button>
+  </div>
+
+  <!-- Rescan Overlay -->
+  <div class="rescan-overlay" id="rescanOverlay">
+    <div class="rescan-sheet">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-size:16px;font-weight:900;color:#111;">🔄 재스캔하기</div>
+        <button onclick="closeRescan()" style="background:#f0f0f0;border:none;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:800;cursor:pointer;color:#555;font-family:'Nunito',sans-serif;">✕ 닫기</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button id="rescanTabCam" onclick="switchRescanTab('cam')" style="flex:1;padding:8px;border-radius:10px;border:none;background:#e8f5e9;color:#2d7a3a;font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;">📷 카메라</button>
+        <button id="rescanTabFile" onclick="switchRescanTab('file')" style="flex:1;padding:8px;border-radius:10px;border:none;background:#f0f0f0;color:#888;font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;">🖼️ 갤러리</button>
+      </div>
+      <div id="rescanCamSection">
+        <div style="background:linear-gradient(145deg,#1a1a2e,#0f3460);border-radius:16px;height:150px;position:relative;overflow:hidden;">
+          <video id="rescanCamVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;display:none;"></video>
+          <div id="rescanCamPH" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;" onclick="startRescanCam()">
+            <div style="font-size:34px;margin-bottom:6px;">📸</div>
+            <div style="color:#fff;font-size:13px;font-weight:700;">탭하여 카메라 시작</div>
+          </div>
+          <div id="rescanCamBtns" style="position:absolute;bottom:10px;left:0;right:0;display:none;justify-content:center;gap:8px;">
+            <button class="cbtn stop" onclick="stopRescanCam(event)">✕ 취소</button>
+            <button class="cbtn flip" onclick="flipRescanCam(event)">🔄 전환</button>
+            <button class="cbtn shoot" onclick="shootRescan(event)">📸 촬영</button>
+          </div>
+        </div>
+        <div id="rescanCamResult" style="display:none;margin-top:10px;">
+          <img id="rescanCamImg" src="" style="width:100%;border-radius:14px;max-height:130px;object-fit:cover;border:2px solid #a5d6a7;display:block;">
+          <button class="abtn" onclick="doRescan('cam')" style="margin-top:8px;">🔍 변화 분석하기</button>
+        </div>
+      </div>
+      <div id="rescanFileSection" style="display:none;">
+        <label style="background:#f7f9f7;border:2px dashed #a5d6a7;border-radius:14px;padding:14px;display:flex;align-items:center;gap:10px;cursor:pointer;" for="rescanFileInput">
+          <div style="width:38px;height:38px;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📁</div>
+          <div><div style="font-size:13px;font-weight:800;color:#2d7a3a;">사진 선택</div><div style="font-size:11px;color:#999;margin-top:1px;font-weight:600;">JPG · PNG 업로드</div></div>
+        </label>
+        <input type="file" id="rescanFileInput" accept="image/*" style="display:none" onchange="loadRescanFile(event)">
+        <div id="rescanFileResult" style="display:none;margin-top:10px;">
+          <img id="rescanFileImg" src="" style="width:100%;border-radius:14px;max-height:130px;object-fit:cover;border:2px solid #a5d6a7;display:block;">
+          <button class="abtn" onclick="doRescan('file')" style="margin-top:8px;">🔍 변화 분석하기</button>
+        </div>
+      </div>
+      <canvas id="rescanCvs" style="display:none"></canvas>
+      <div id="rescanCompareResult" style="display:none;margin-top:12px;"></div>
+    </div>
   </div>
 </div>
 
@@ -1114,12 +1203,247 @@ async function loadPrepForProduce(name, idx, emoji) {
 }
 
 function showPage(page) {
-  const map = {home:'pageHome', recipe:'pageRecipe', prep:'pagePrep'};
-  const btnMap = {home:'btnHome', recipe:'btnRecipe', prep:'btnPrep'};
+  const map = {home:'pageHome', recipe:'pageRecipe', prep:'pagePrep', history:'pageHistory'};
+  const btnMap = {home:'btnHome', recipe:'btnRecipe', prep:'btnPrep', history:'btnHistory'};
   Object.values(map).forEach(id => document.getElementById(id).classList.remove('active'));
   Object.values(btnMap).forEach(id => document.getElementById(id).classList.remove('active'));
   document.getElementById(map[page]).classList.add('active');
   document.getElementById(btnMap[page]).classList.add('active');
+  if (page === 'history') renderHistList();
+}
+
+// ---- HISTORY / FAV FEATURE ----
+const PRODUCE_EMOJI_MAP = {'사과':'🍎','딸기':'🍓','토마토':'🍅','배추':'🥬','감자':'🥔','당근':'🥕','오이':'🥒','양파':'🧅','무':'🫜','수박':'🍉','포도':'🍇','바나나':'🍌'};
+function getProduceEmoji(name) {
+  for (const [k,v] of Object.entries(PRODUCE_EMOJI_MAP)) {
+    if (name.includes(k)) return v;
+  }
+  return '🥬';
+}
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem('scanHistory') || '[]'); } catch(e) { return []; }
+}
+function saveHistory(arr) {
+  try { localStorage.setItem('scanHistory', JSON.stringify(arr)); } catch(e) {}
+}
+
+function toggleFav() {
+  if (!lastResult) return;
+  const now = new Date();
+  const dateStr = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0');
+  const entry = {
+    id: Date.now(),
+    produce: lastResult.produce,
+    emoji: getProduceEmoji(lastResult.produce),
+    score: lastResult.score,
+    date: dateStr,
+    dateMs: Date.now(),
+    desc: lastResult.desc || ''
+  };
+  const hist = loadHistory();
+  hist.unshift(entry);
+  saveHistory(hist);
+  const btn = document.getElementById('favBtn');
+  btn.textContent = '✅ 찜 완료!';
+  btn.classList.add('saved');
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = '⭐ 찜하기';
+    btn.classList.remove('saved');
+    btn.disabled = false;
+  }, 2000);
+}
+
+function renderHistList() {
+  const list = document.getElementById('histList');
+  const hist = loadHistory();
+  if (!hist.length) {
+    list.innerHTML = '<div class="hist-empty"><div class="hist-empty-ico">📋</div><div class="hist-empty-t">찜한 항목이 없어요</div><div class="hist-empty-s">홈에서 분석 후 ⭐ 찜하기를 눌러보세요!</div></div>';
+    return;
+  }
+  list.innerHTML = hist.map(h => {
+    const s = parseFloat(h.score);
+    const col = s >= 8 ? '#43a047' : s >= 6 ? '#7cb342' : s >= 4 ? '#fb8c00' : '#e53935';
+    return '<div class="hist-card">' +
+      '<div class="hist-top">' +
+        '<span class="hist-emo">' + (h.emoji||'🥬') + '</span>' +
+        '<div class="hist-info"><div class="hist-name">' + h.produce + '</div><div class="hist-date">📅 ' + h.date + ' 저장</div></div>' +
+        '<span class="hist-score" style="color:' + col + '">' + h.score + '</span>' +
+      '</div>' +
+      '<div style="display:flex;">' +
+        '<button class="hist-rescan" onclick="openRescan(' + h.id + ')">🔄 재스캔</button>' +
+        '<button class="hist-delete" onclick="deleteHist(' + h.id + ')">🗑</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function deleteHist(id) {
+  saveHistory(loadHistory().filter(h => h.id !== id));
+  renderHistList();
+}
+
+let currentRescanId = null;
+let rescanStream = null;
+let rescanFacingMode = 'environment';
+
+function openRescan(id) {
+  currentRescanId = id;
+  document.getElementById('rescanOverlay').classList.add('open');
+  document.getElementById('rescanCamResult').style.display = 'none';
+  document.getElementById('rescanFileResult').style.display = 'none';
+  document.getElementById('rescanCompareResult').style.display = 'none';
+  document.getElementById('rescanCamImg').src = '';
+  document.getElementById('rescanFileImg').src = '';
+  switchRescanTab('cam');
+}
+
+function closeRescan() {
+  document.getElementById('rescanOverlay').classList.remove('open');
+  stopRescanCam(null);
+  currentRescanId = null;
+}
+
+function switchRescanTab(tab) {
+  const isCam = tab === 'cam';
+  document.getElementById('rescanCamSection').style.display = isCam ? 'block' : 'none';
+  document.getElementById('rescanFileSection').style.display = isCam ? 'none' : 'block';
+  document.getElementById('rescanTabCam').style.background = isCam ? '#e8f5e9' : '#f0f0f0';
+  document.getElementById('rescanTabCam').style.color = isCam ? '#2d7a3a' : '#888';
+  document.getElementById('rescanTabFile').style.background = isCam ? '#f0f0f0' : '#e8f5e9';
+  document.getElementById('rescanTabFile').style.color = isCam ? '#888' : '#2d7a3a';
+  if (!isCam) stopRescanCam(null);
+}
+
+async function startRescanCam(mode) {
+  if (mode) rescanFacingMode = mode;
+  try {
+    if (rescanStream) { rescanStream.getTracks().forEach(t => t.stop()); rescanStream = null; }
+    rescanStream = await navigator.mediaDevices.getUserMedia({video:{facingMode: rescanFacingMode}, audio:false});
+    const v = document.getElementById('rescanCamVideo');
+    v.srcObject = rescanStream; v.style.display = 'block';
+    document.getElementById('rescanCamPH').style.display = 'none';
+    document.getElementById('rescanCamBtns').style.display = 'flex';
+  } catch(e) { alert('카메라 권한을 허용해주세요.'); }
+}
+
+function flipRescanCam(e) { e.stopPropagation(); startRescanCam(rescanFacingMode === 'environment' ? 'user' : 'environment'); }
+
+function stopRescanCam(e) {
+  if (e) e.stopPropagation();
+  if (rescanStream) { rescanStream.getTracks().forEach(t => t.stop()); rescanStream = null; }
+  const v = document.getElementById('rescanCamVideo'); if(v) v.style.display = 'none';
+  const ph = document.getElementById('rescanCamPH'); if(ph) ph.style.display = 'flex';
+  const bt = document.getElementById('rescanCamBtns'); if(bt) bt.style.display = 'none';
+}
+
+function shootRescan(e) {
+  e.stopPropagation();
+  const v = document.getElementById('rescanCamVideo');
+  const c = document.getElementById('rescanCvs');
+  c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext('2d').drawImage(v, 0, 0);
+  stopRescanCam(null);
+  document.getElementById('rescanCamImg').src = c.toDataURL('image/jpeg');
+  document.getElementById('rescanCamResult').style.display = 'block';
+  document.getElementById('rescanCompareResult').style.display = 'none';
+}
+
+function loadRescanFile(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('rescanFileImg').src = ev.target.result;
+    document.getElementById('rescanFileResult').style.display = 'block';
+    document.getElementById('rescanCompareResult').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function doRescan(src) {
+  if (!currentRescanId) return;
+  const hist = loadHistory();
+  const entry = hist.find(h => h.id === currentRescanId);
+  if (!entry) return;
+  const imgEl = document.getElementById(src === 'cam' ? 'rescanCamImg' : 'rescanFileImg');
+  if (!imgEl.src || imgEl.src === window.location.href) { alert('사진을 먼저 준비해주세요!'); return; }
+  const resultEl = document.getElementById('rescanCompareResult');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:13px;font-weight:700;">⏳ AI 분석 중...</div>';
+  resultEl.scrollIntoView({behavior:'smooth', block:'nearest'});
+  try {
+    const base64 = imgToBase64(imgEl);
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct', temperature: 0,
+        messages: [{role:'user', content:[
+          {type:'image_url', image_url:{url:'data:image/jpeg;base64,' + base64}},
+          {type:'text', text:'사진 속 ' + entry.produce + '의 신선도를 엄격하게 채점하세요.\\n[채점 규칙]\\n• 곰팡이·악취 → 2점 이하\\n• 부패·변색·물러짐 → 4점 이하\\n• 완벽히 신선 → 8점 이상\\n• 점수는 소수점 첫째 자리까지\\n[출력 형식]\\n종합 신선도 점수: (0.0~10.0)\\n상태 설명: (한 문장)'}
+        ]}]
+      })
+    });
+    if (!res.ok) throw new Error('API 오류: ' + res.status);
+    const json = await res.json();
+    const raw = json.choices[0].message.content.replace(/\*+/g,'').replace(/#+/g,'').trim();
+    const parseScore = r => { const m = (r||'').match(/([\d.]+)/); return m ? parseFloat(m[1]) : 5.0; };
+    let newScore = 5.0; let newDesc = '';
+    raw.split('\\n').forEach(line => {
+      if (line.includes('신선도 점수') || line.includes('종합')) newScore = parseScore(line);
+      else if (line.includes('상태 설명') || line.includes('설명')) newDesc = line.slice(line.indexOf(':')+1).trim();
+    });
+    // Clamp to reasonable range
+    newScore = Math.max(0, Math.min(10, newScore));
+
+    // AI comment
+    let aiComment = '';
+    try {
+      const aiRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          messages: [{role:'user', content: entry.produce + '을(를) ' + entry.date + '에 신선도 ' + entry.score + '점으로 저장했고, 오늘 재스캔 결과 ' + newScore.toFixed(1) + '점입니다. 변화를 친근하게 한국어 두 문장으로 설명해주세요. 다른 말은 쓰지 마세요.'}]
+        })
+      });
+      if (aiRes.ok) {
+        const aiJson = await aiRes.json();
+        aiComment = aiJson.choices[0].message.content.replace(/\*+/g,'').replace(/#+/g,'').trim();
+      }
+    } catch(e) {}
+
+    const origScore = parseFloat(entry.score);
+    const diff = newScore - origScore;
+    const diffStr = (diff >= 0 ? '+' : '') + diff.toFixed(1);
+    const diffColor = diff < -0.3 ? '#e53935' : diff > 0.3 ? '#43a047' : '#888';
+    const daysElapsed = Math.max(0, Math.round((Date.now() - entry.dateMs) / 86400000));
+    const origCol = origScore >= 8 ? '#43a047' : origScore >= 6 ? '#7cb342' : origScore >= 4 ? '#fb8c00' : '#e53935';
+    const newCol  = newScore  >= 8 ? '#43a047' : newScore  >= 6 ? '#7cb342' : newScore  >= 4 ? '#fb8c00' : '#e53935';
+    resultEl.innerHTML =
+      '<div style="font-size:13px;font-weight:900;color:#111;margin-bottom:10px;">📊 재스캔 결과</div>' +
+      '<div class="htimeline">' +
+        '<div class="htl-node">' +
+          '<div class="htl-circle" style="background:' + origCol + '22;color:' + origCol + '">' + entry.score + '</div>' +
+          '<div class="htl-label">처음<br>' + entry.date + '</div>' +
+        '</div>' +
+        '<div class="htl-line"></div>' +
+        '<div class="htl-node">' +
+          '<div class="htl-circle" style="background:' + newCol + '22;color:' + newCol + '">' + newScore.toFixed(1) + '</div>' +
+          '<div class="htl-label">지금<br>오늘</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="hstats-row">' +
+        '<div class="hstat"><div class="hstat-label">경과 일수</div><div class="hstat-val">' + daysElapsed + '일</div></div>' +
+        '<div class="hstat"><div class="hstat-label">신선도 변화</div><div class="hstat-val" style="color:' + diffColor + '">' + diffStr + '점</div></div>' +
+        '<div class="hstat"><div class="hstat-label">현재 상태</div><div class="hstat-val" style="color:' + newCol + '">' + newScore.toFixed(1) + '점</div></div>' +
+      '</div>' +
+      (aiComment ? '<div class="hai-comment">🤖 ' + aiComment + '</div>' : '') +
+      (newDesc ? '<div style="background:#f7f9f7;border-radius:10px;padding:8px 12px;font-size:11px;color:#555;margin-top:8px;line-height:1.6;">' + newDesc + '</div>' : '');
+  } catch(err) {
+    resultEl.innerHTML = '<div style="text-align:center;padding:16px;color:#e53935;font-size:13px;font-weight:700;">오류: ' + err.message + '</div>';
+  }
 }
 
 </script>

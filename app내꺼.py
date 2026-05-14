@@ -264,16 +264,34 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .hist-empty-ico{font-size:48px;margin-bottom:12px;}
 .hist-empty-t{font-size:14px;font-weight:800;color:#bbb;}
 .hist-empty-s{font-size:12px;margin-top:6px;font-weight:600;}
-.hist-card{background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);flex-shrink:0;}
-.hist-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
-.hist-emo{font-size:32px;flex-shrink:0;}
-.hist-info{flex:1;}
-.hist-name{font-size:14px;font-weight:800;color:#111;}
-.hist-date{font-size:11px;color:#aaa;font-weight:600;margin-top:2px;}
-.hist-score{font-size:22px;font-weight:900;}
-.hist-rescan{padding:9px 16px;background:linear-gradient(135deg,#2d7a3a,#4caf50);border:none;border-radius:12px;color:#fff;font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;}
-.hist-rescan:active{opacity:0.85;}
-.hist-delete{padding:9px 12px;background:#f5f5f5;border:none;border-radius:12px;color:#aaa;font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-left:6px;}
+.hist-tabbar{display:flex;background:#fff;border-bottom:1px solid #ebebeb;flex-shrink:0;}
+.hist-tabbtn{flex:1;border:none;background:transparent;padding:11px 4px;font-size:11px;font-weight:800;color:#bbb;cursor:pointer;font-family:'Nunito',sans-serif;border-bottom:2px solid transparent;transition:all 0.15s;}
+.hist-tabbtn.active{color:#2d7a3a;border-bottom-color:#2d7a3a;}
+.hist-alert{background:linear-gradient(135deg,#2d7a3a,#43a047);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:12px;cursor:default;}
+.hist-alert-t{font-size:13px;font-weight:900;color:#fff;}
+.hist-alert-s{font-size:11px;color:rgba(255,255,255,0.82);margin-top:3px;font-weight:600;}
+.hcmp-card{background:#fff;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.hcmp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.hcmp-name{font-size:13px;font-weight:900;color:#111;}
+.hbadge{font-size:10px;font-weight:800;padding:3px 9px;border-radius:10px;}
+.hbadge.dn{background:#fdecea;color:#e53935;}
+.hbadge.up{background:#e8f5e9;color:#2d7a3a;}
+.hbar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.hbar-date{font-size:10px;color:#aaa;font-weight:700;min-width:36px;text-align:right;}
+.hbar-track{flex:1;background:#f0f0f0;border-radius:6px;height:9px;overflow:hidden;}
+.hbar-fill{height:100%;border-radius:6px;}
+.hbar-score{font-size:12px;font-weight:900;min-width:26px;}
+.hlist-item{background:#fff;border-radius:16px;padding:13px 14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.05);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.hlist-ico{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.hlist-info{flex:1;min-width:0;}
+.hlist-name{font-size:14px;font-weight:900;color:#111;}
+.hlist-meta{font-size:11px;color:#aaa;font-weight:600;margin-top:2px;}
+.hlist-right{text-align:right;flex-shrink:0;}
+.hlist-score{font-size:22px;font-weight:900;line-height:1;}
+.hlist-change{font-size:10px;font-weight:700;margin-top:3px;}
+.hsec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.hsec-t{font-size:14px;font-weight:900;color:#1a1a1a;}
+.hsec-cnt{font-size:11px;font-weight:700;color:#aaa;}
 .rescan-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.55);z-index:50;display:none;flex-direction:column;border-radius:50px;overflow:hidden;}
 .rescan-overlay.open{display:flex;}
 .rescan-sheet{background:#f7faf7;border-radius:28px 28px 0 0;margin-top:auto;padding:20px 18px 28px;max-height:88%;overflow-y:auto;}
@@ -510,9 +528,14 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
   <div id="pageHistory" class="page">
     <div class="tab-hdr">
       <div class="tab-hdr-title">📋 히스토리</div>
-      <div class="tab-hdr-sub">찜한 농산물의 신선도 변화를 추적하세요</div>
+      <div class="tab-hdr-sub">내 농산물 분석 기록</div>
     </div>
-    <div class="scroll plist" id="histList"></div>
+    <div class="hist-tabbar">
+      <button class="hist-tabbtn active" id="htab0" onclick="switchHistTab(0)">📋 전체 기록</button>
+      <button class="hist-tabbtn" id="htab1" onclick="switchHistTab(1)">⭐ 찜한 항목</button>
+      <button class="hist-tabbtn" id="htab2" onclick="switchHistTab(2)">📊 비교 분석</button>
+    </div>
+    <div class="scroll" id="histContent" style="padding:12px 14px 24px;"></div>
   </div>
 
   </div><!-- /pages -->
@@ -817,6 +840,7 @@ async function analyze(src) {
       else if (s < 6) shelfFinal = shelf || '오늘~내일 사용 권장';
       else shelfFinal = shelf;
       showResult(produce, score, colorScoreFinal, textureScoreFinal, status, desc, storage, shelfFinal);
+      autoSaveEntry(src);
     } catch(err) {
       document.getElementById('remo').textContent = '❌';
       document.getElementById('rname').textContent = '분석 실패';
@@ -1209,17 +1233,20 @@ function showPage(page) {
   Object.values(btnMap).forEach(id => document.getElementById(id).classList.remove('active'));
   document.getElementById(map[page]).classList.add('active');
   document.getElementById(btnMap[page]).classList.add('active');
-  if (page === 'history') renderHistList();
+  if (page === 'history') renderHistContent();
 }
 
-// ---- HISTORY / FAV FEATURE ----
+// ---- HISTORY FEATURE ----
 const PRODUCE_EMOJI_MAP = {'사과':'🍎','딸기':'🍓','토마토':'🍅','배추':'🥬','감자':'🥔','당근':'🥕','오이':'🥒','양파':'🧅','무':'🫜','수박':'🍉','포도':'🍇','바나나':'🍌'};
 function getProduceEmoji(name) {
-  for (const [k,v] of Object.entries(PRODUCE_EMOJI_MAP)) {
-    if (name.includes(k)) return v;
-  }
+  for (const [k,v] of Object.entries(PRODUCE_EMOJI_MAP)) { if (name.includes(k)) return v; }
   return '🥬';
 }
+function getEmojiBg(e) {
+  const m={'🍎':'#fce4e4','🍓':'#fce4e4','🍅':'#fce4e4','🥬':'#e4f0e4','🥔':'#fdf5e4','🥕':'#fdecea','🥒':'#e4f0e4','🧅':'#fdf5e4','🫜':'#f5f5f5','🍉':'#fce4e4','🍇':'#f0e4fc','🍌':'#fdf5e4'};
+  return m[e]||'#f0f0f0';
+}
+function getScoreCol(s){const n=parseFloat(s);return n>=8?'#43a047':n>=6?'#7cb342':n>=4?'#fb8c00':'#e53935';}
 
 function loadHistory() {
   try { return JSON.parse(localStorage.getItem('scanHistory') || '[]'); } catch(e) { return []; }
@@ -1228,60 +1255,147 @@ function saveHistory(arr) {
   try { localStorage.setItem('scanHistory', JSON.stringify(arr)); } catch(e) {}
 }
 
-function toggleFav() {
+let lastEntryId = null;
+let currentHistTab = 0;
+
+function autoSaveEntry(method) {
   if (!lastResult) return;
   const now = new Date();
   const dateStr = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0');
   const entry = {
-    id: Date.now(),
-    produce: lastResult.produce,
+    id: Date.now(), produce: lastResult.produce,
     emoji: getProduceEmoji(lastResult.produce),
-    score: lastResult.score,
-    date: dateStr,
-    dateMs: Date.now(),
-    desc: lastResult.desc || ''
+    score: lastResult.score, date: dateStr, dateMs: Date.now(),
+    method: method, starred: false, desc: lastResult.desc || ''
   };
-  const hist = loadHistory();
-  hist.unshift(entry);
-  saveHistory(hist);
+  const hist = loadHistory(); hist.unshift(entry); saveHistory(hist);
+  lastEntryId = entry.id;
   const btn = document.getElementById('favBtn');
-  btn.textContent = '✅ 찜 완료!';
-  btn.classList.add('saved');
-  btn.disabled = true;
-  setTimeout(() => {
-    btn.textContent = '⭐ 찜하기';
-    btn.classList.remove('saved');
-    btn.disabled = false;
-  }, 2000);
+  if (btn) { btn.textContent = '⭐ 찜하기'; btn.classList.remove('saved'); btn.disabled = false; }
 }
 
-function renderHistList() {
-  const list = document.getElementById('histList');
+function toggleFav() {
+  if (!lastEntryId) return;
   const hist = loadHistory();
+  const entry = hist.find(h => h.id === lastEntryId);
+  if (!entry) return;
+  entry.starred = !entry.starred;
+  saveHistory(hist);
+  const btn = document.getElementById('favBtn');
+  if (entry.starred) { btn.textContent = '⭐ 찜됨'; btn.classList.add('saved'); }
+  else { btn.textContent = '⭐ 찜하기'; btn.classList.remove('saved'); }
+}
+
+function switchHistTab(tab) {
+  currentHistTab = tab;
+  [0,1,2].forEach(i => document.getElementById('htab'+i).classList.toggle('active', i===tab));
+  renderHistContent();
+}
+
+function renderHistList() { renderHistContent(); }
+
+function renderHistContent() {
+  const content = document.getElementById('histContent');
+  if (!content) return;
+  const hist = loadHistory();
+  if (currentHistTab === 0) renderAllRecords(content, hist, false);
+  else if (currentHistTab === 1) renderAllRecords(content, hist.filter(h=>h.starred), true);
+  else renderCompareTab(content, hist);
+}
+
+function renderAllRecords(content, hist, isStarred) {
   if (!hist.length) {
-    list.innerHTML = '<div class="hist-empty"><div class="hist-empty-ico">📋</div><div class="hist-empty-t">찜한 항목이 없어요</div><div class="hist-empty-s">홈에서 분석 후 ⭐ 찜하기를 눌러보세요!</div></div>';
+    const msg = isStarred ? '찜한 항목이 없어요' : '분석 기록이 없어요';
+    const sub = isStarred ? '기록 목록에서 ⭐를 눌러 찜하세요!' : '홈에서 농산물을 분석하면 자동으로 저장돼요!';
+    const ico = isStarred ? '⭐' : '📋';
+    content.innerHTML = '<div class="hist-empty"><div class="hist-empty-ico">'+ico+'</div><div class="hist-empty-t">'+msg+'</div><div class="hist-empty-s">'+sub+'</div></div>';
     return;
   }
-  list.innerHTML = hist.map(h => {
-    const s = parseFloat(h.score);
-    const col = s >= 8 ? '#43a047' : s >= 6 ? '#7cb342' : s >= 4 ? '#fb8c00' : '#e53935';
-    return '<div class="hist-card">' +
-      '<div class="hist-top">' +
-        '<span class="hist-emo">' + (h.emoji||'🥬') + '</span>' +
-        '<div class="hist-info"><div class="hist-name">' + h.produce + '</div><div class="hist-date">📅 ' + h.date + ' 저장</div></div>' +
-        '<span class="hist-score" style="color:' + col + '">' + h.score + '</span>' +
-      '</div>' +
-      '<div style="display:flex;">' +
-        '<button class="hist-rescan" onclick="openRescan(' + h.id + ')">🔄 재스캔</button>' +
-        '<button class="hist-delete" onclick="deleteHist(' + h.id + ')">🗑</button>' +
-      '</div>' +
+  const allHist = loadHistory();
+  const byProduce = {};
+  allHist.forEach(h => { if(!byProduce[h.produce]) byProduce[h.produce]=[]; byProduce[h.produce].push(h); });
+  const items = hist.map(h => {
+    const col = getScoreCol(h.score);
+    const bg = getEmojiBg(h.emoji||'🥬');
+    const methodLabel = h.method==='cam'?'카메라 스캔':h.method==='upload'?'갤러리 업로드':'분석';
+    const group = byProduce[h.produce]||[];
+    const idx = group.findIndex(g=>g.id===h.id);
+    const prev = group[idx+1];
+    let changeHtml = '<span style="color:#bbb;font-weight:700;font-size:10px;">✨ 첫 분석</span>';
+    if (prev) {
+      const raw = parseFloat(h.score) - parseFloat(prev.score);
+      const days = Math.max(1, Math.round((h.dateMs - prev.dateMs)/86400000));
+      const arrow = raw>=0?'▲':'▼'; const cc = raw>=0?'#2d7a3a':'#e53935';
+      changeHtml = '<span style="color:'+cc+';font-weight:800;font-size:10px;">'+arrow+Math.abs(raw).toFixed(1)+'점 ('+days+'일 전 대비)</span>';
+    }
+    const starTxt = h.starred ? '⭐' : '☆';
+    return '<div class="hlist-item">' +
+      '<div class="hlist-ico" style="background:'+bg+'">'+(h.emoji||'🥬')+'</div>' +
+      '<div class="hlist-info"><div class="hlist-name">'+h.produce+'</div><div class="hlist-meta">'+h.date+' · '+methodLabel+'</div></div>' +
+      '<div class="hlist-right"><div class="hlist-score" style="color:'+col+'">'+h.score+'점</div><div class="hlist-change">'+changeHtml+'</div></div>' +
+      '<span style="font-size:18px;cursor:pointer;flex-shrink:0;user-select:none;" onclick="toggleItemStar('+h.id+',this)">'+starTxt+'</span>' +
+      '<button onclick="openRescan('+h.id+')" style="background:none;border:none;font-size:16px;cursor:pointer;flex-shrink:0;padding:2px 1px;" title="재스캔">🔄</button>' +
+      '<button onclick="deleteHist('+h.id+')" style="background:none;border:none;color:#ccc;font-size:20px;cursor:pointer;flex-shrink:0;padding:2px 1px;line-height:1;">×</button>' +
     '</div>';
   }).join('');
+  content.innerHTML = '<div class="hsec-hdr"><span class="hsec-t">전체 분석 기록</span><span class="hsec-cnt">총 '+hist.length+'건</span></div>' + items;
+}
+
+function toggleItemStar(id, el) {
+  const hist = loadHistory();
+  const entry = hist.find(h=>h.id===id);
+  if (!entry) return;
+  entry.starred = !entry.starred;
+  saveHistory(hist);
+  el.textContent = entry.starred ? '⭐' : '☆';
+  if (id === lastEntryId) {
+    const btn = document.getElementById('favBtn');
+    if (btn) { btn.textContent=entry.starred?'⭐ 찜됨':'⭐ 찜하기'; if(entry.starred)btn.classList.add('saved');else btn.classList.remove('saved'); }
+  }
+}
+
+function renderCompareTab(content, hist) {
+  if (hist.length < 2) {
+    content.innerHTML = '<div class="hist-empty"><div class="hist-empty-ico">📊</div><div class="hist-empty-t">비교할 데이터가 부족해요</div><div class="hist-empty-s">같은 농산물을 2번 이상 분석하면 비교할 수 있어요!</div></div>';
+    return;
+  }
+  const groups = {};
+  hist.forEach(h => { if(!groups[h.produce]) groups[h.produce]=[]; groups[h.produce].push(h); });
+  const multiGroups = Object.entries(groups).filter(([,v])=>v.length>=2);
+  if (!multiGroups.length) {
+    content.innerHTML = '<div class="hist-empty"><div class="hist-empty-ico">📊</div><div class="hist-empty-t">비교할 데이터가 부족해요</div><div class="hist-empty-s">같은 농산물을 2번 이상 분석해보세요!</div></div>';
+    return;
+  }
+  let alertHtml = '';
+  multiGroups.forEach(([name, entries]) => {
+    const sorted = [...entries].sort((a,b)=>a.dateMs-b.dateMs);
+    const last=sorted[sorted.length-1], prev=sorted[sorted.length-2];
+    const diff = parseFloat(last.score)-parseFloat(prev.score);
+    if (diff < -0.5 && !alertHtml) {
+      const emoji = sorted[0].emoji||'🥬';
+      alertHtml = '<div class="hist-alert"><span style="font-size:26px;flex-shrink:0;">📉</span><div><div class="hist-alert-t">'+emoji+' '+name+' 신선도가 떨어지고 있어요!</div><div class="hist-alert-s">지난 '+sorted.length+'번의 분석 결과를 확인해보세요</div></div></div>';
+    }
+  });
+  const cards = multiGroups.map(([name, entries]) => {
+    const sorted = [...entries].sort((a,b)=>a.dateMs-b.dateMs);
+    const emoji = sorted[0].emoji||'🥬';
+    const totalDiff = parseFloat(sorted[sorted.length-1].score)-parseFloat(sorted[0].score);
+    const badge = '<span class="hbadge '+(totalDiff>=0?'up':'dn')+'">'+(totalDiff>=0?'▲':'▼')+Math.abs(totalDiff).toFixed(1)+'점</span>';
+    const rows = sorted.slice(-4).map((e,i,arr) => {
+      const isLast = i===arr.length-1;
+      const lbl = isLast ? '오늘' : e.date.slice(5).replace('.','/');
+      const col = getScoreCol(e.score);
+      const pct = Math.min(100, parseFloat(e.score)*10);
+      return '<div class="hbar-row"><span class="hbar-date">'+lbl+'</span><div class="hbar-track"><div class="hbar-fill" style="width:'+pct+'%;background:'+col+'"></div></div><span class="hbar-score" style="color:'+col+'">'+e.score+'</span></div>';
+    }).join('');
+    return '<div class="hcmp-card"><div class="hcmp-hdr"><span class="hcmp-name">'+emoji+' '+name+'</span>'+badge+'</div>'+rows+'</div>';
+  }).join('');
+  content.innerHTML = alertHtml + '<div class="hsec-hdr" style="margin-bottom:10px;"><span class="hsec-t">📊 최근 분석 비교</span></div>' + cards;
 }
 
 function deleteHist(id) {
   saveHistory(loadHistory().filter(h => h.id !== id));
-  renderHistList();
+  renderHistContent();
 }
 
 let currentRescanId = null;

@@ -295,6 +295,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .hlist-right{text-align:right;flex-shrink:0;}
 .hlist-score{font-size:22px;font-weight:900;line-height:1;}
 .hlist-change{font-size:10px;font-weight:700;margin-top:3px;}
+.hlist-right{text-align:right;flex-shrink:0;}
 .hsec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .hsec-t{font-size:14px;font-weight:900;color:#1a1a1a;}
 .hsec-cnt{font-size:11px;font-weight:700;color:#aaa;}
@@ -513,9 +514,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
     <div style="text-align:center;color:#aaa;font-size:0.78rem;padding:1.5rem 0;">Scan Eat! © 2026</div>
 
   </div>
-  </div><!-- /pageHome -->
-
-  <div id="pageRecipe" class="page">
+  </div><div id="pageRecipe" class="page">
     <div class="tab-hdr">
       <div class="tab-hdr-title">🍳 레시피</div>
       <div class="tab-hdr-sub">농산물을 선택하면 레시피를 볼 수 있어요</div>
@@ -544,9 +543,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
     <div class="scroll" id="histContent" style="padding:12px 14px 24px;"></div>
   </div>
 
-  </div><!-- /pages -->
-
-  <div class="bnav">
+  </div><div class="bnav">
     <button class="bnav-btn active" id="btnHome" onclick="showPage('home')">
       <span class="bnav-ico">🏠</span><span>홈</span>
     </button>
@@ -561,7 +558,6 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
     </button>
   </div>
 
-  <!-- Rescan Overlay -->
   <div class="rescan-overlay" id="rescanOverlay">
     <div class="rescan-sheet">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -718,7 +714,7 @@ function showResult(produce, score, colorScore, textureScore, status, desc, stor
   } else if (s >= 6) {
     tagCls = 'g'; emoji = '👍'; color = '#7cb342'; statusLabel = '양호';
   } else if (s >= 4) {
-    tagCls = 'y'; emoji = '⚠️'; color = '#fb8c00'; statusLabel = '주의';
+    tagCls = 'y'; emoji = '⚠️'; color = '#fb8000'; statusLabel = '주의';
   } else if (s >= 2) {
     tagCls = 'o'; emoji = '🚨'; color = '#e64a19'; statusLabel = '위험';
   } else {
@@ -963,7 +959,7 @@ async function analyzeCompare() {
     });
     if (!res.ok) throw new Error('API 오류: ' + res.status);
     const json = await res.json();
-    const raw = json.choices[0].message.content.replace(/\*+/g,'').replace(/#+/g,'').trim();
+    const raw = json.choices[0].message.content.replace(/\\*+/g,'').replace(/#+/g,'').trim();
     const sectionKeys = [
       {key:'농산물 종류', kws:['농산물','종류','채소','작물','식품']},
       {key:'종합 신선도 점수', kws:['종합','신선도 점수']},
@@ -978,7 +974,7 @@ async function analyzeCompare() {
       if (matched) { curSec = matched.key; sections[curSec] = v; }
       else if (curSec && line.trim()) sections[curSec] += ' ' + line.trim();
     }
-    const parseScore = r => { const m = (r||'').match(/([\d.]+)/); return m ? parseFloat(m[1]).toFixed(1) : '5.0'; };
+    const parseScore = r => { const m = (r||'').match(/([\\d.]+)/); return m ? parseFloat(m[1]).toFixed(1) : '5.0'; };
     const bProduce = sections['농산물 종류'] || '농산물';
     const bDesc    = sections['상태 설명'] || '';
     let bs = parseFloat(parseScore(sections['종합 신선도 점수']));
@@ -1006,9 +1002,7 @@ async function analyzeCompare() {
     const diff     = Math.abs(aScore - bScore).toFixed(1);
     const aWins    = aScore > bScore;
     const tie      = diff < 0.5;
-    const summary  = tie
-      ? '두 개의 신선도가 거의 비슷합니다.'
-      : (aWins ? 'A가 ' + diff + '점 더 신선합니다. A를 선택하세요! 👈' : 'B가 ' + diff + '점 더 신선합니다. B를 선택하세요! 👉');
+    const summary  = tie ? '두 개의 신선도가 거의 비슷합니다.' : (aWins ? 'A가 ' + diff + '점 더 신선합니다. A를 선택하세요! 👈' : 'B가 ' + diff + '점 더 신선합니다. B를 선택하세요! 👉');
     resultEl.innerHTML =
       '<div class="cmp-grid">' +
         '<div class="cmp-card' + (aWins || tie ? ' winner' : '') + '">' +
@@ -1157,10 +1151,8 @@ async function loadRecipeForProduce(name, idx, emoji) {
       else if (ck && line.trim()) secs[ck] += '\\n' + line.trim();
     });
     if (!secs.name) return '';
-    const ingrChips = (secs.ingr||'').split(/[,\\n]/).map(s=>s.trim()).filter(Boolean)
-      .map(s=>'<span>'+s+'</span>').join('');
-    const stepsHtml = (secs.steps||'').split('\\n').map(s=>s.trim()).filter(Boolean)
-      .map((s,i)=>'<li><span class="rcstep-n">'+(i+1)+'</span>'+s.replace(/^\\d+[.)\\s]*/,'')+'</li>').join('');
+    const ingrChips = (secs.ingr||'').split(/[,\\n]/).map(s=>s.trim()).filter(Boolean).map(s=>'<span>'+s+'</span>').join('');
+    const stepsHtml = (secs.steps||'').split('\\n').map(s=>s.trim()).filter(Boolean).map((s,i)=>'<li><span class="rcstep-n">'+(i+1)+'</span>'+s.replace(/^\\d+[.)\\s]*/,'')+'</li>').join('');
     const diff = secs.diff||'보통';
     const diffStar = diff.includes('어려') ? '⭐⭐⭐' : diff.includes('보통') ? '⭐⭐' : '⭐';
     return '<div class="rcipe-card">' +
@@ -1226,7 +1218,7 @@ const STATIC_PREP_DATA = {
     steps: [
       '겉의 마른 껍질을 손으로 벗겨낸다',
       '위 꼭지 부분과 뿌리 부분을 칼로 잘라낸다',
-      '반으로 잘라 흐르는 물에 헹군다',
+      '반으로 자른 후 흐르는 물에 헹군다',
       '용도에 따라 채썰기, 깍둑썰기, 링 모양으로 썬다'
     ],
     tip: '눈물을 줄이려면 냉장 보관 후 차갑게 썰거나, 물 속에서 자르세요'
@@ -1245,9 +1237,7 @@ const STATIC_PREP_DATA = {
 async function loadPrepForProduce(name, idx, emoji) {
   if (STATIC_PREP_DATA[name]) {
     const data = STATIC_PREP_DATA[name];
-    const stepsHtml = data.steps.map((s,i) =>
-      '<li><span class="pstep-n">'+(i+1)+'</span>'+s+'</li>'
-    ).join('');
+    const stepsHtml = data.steps.map((s,i) => '<li><span class="pstep-n">'+(i+1)+'</span>'+s+'</li>').join('');
     const hdr = '<div class="rcipe-hdr"><span class="rhemo">'+(emoji||'🥬')+'</span><div><h3>'+name+' 손질법</h3><p>올바른 손질 방법 가이드</p></div></div>';
     const section = '<div class="psection"><div class="pstitle">🔪 손질 방법</div><ol class="pstep-list">'+stepsHtml+'</ol></div>';
     const tip = data.tip ? '<div class="rctip">💡 <strong>팁:</strong> '+data.tip+'</div>' : '';
@@ -1283,23 +1273,13 @@ async function loadPrepForProduce(name, idx, emoji) {
     if (ck!==null) secs[ck]=(secs[ck]||'')+t+'\\n';
   });
   const mkSteps = (ico, title, txt) => {
-    const items = (txt||'').split('\\n').filter(s=>s.trim())
-      .map((s,i)=>'<li><span class="pstep-n">'+(i+1)+'</span>'+s.replace(/^[\\d]+[.)\\s]+/,'')+'</li>').join('');
+    const items = (txt||'').split('\\n').filter(s=>s.trim()).map((s,i)=>'<li><span class="pstep-n">'+(i+1)+'</span>'+s.replace(/^[\\d]+[.)\\s]+/,'')+'</li>').join('');
     if (!items) return '';
     return '<div class="psection"><div class="pstitle">'+ico+' '+title+'</div><ol class="pstep-list">'+items+'</ol></div>';
   };
-  const cautionItems = (secs.caution||'').split('\\n').filter(s=>s.trim())
-    .map(s=>'<li>'+s.replace(/^[•·\\-]+\\s*/,'')+'</li>').join('');
+  const cautionItems = (secs.caution||'').split('\\n').filter(s=>s.trim()).map(s=>'<li>'+s.replace(/^[•·\\-]+\\s*/,'')+'</li>').join('');
   const hdr = '<div class="rcipe-hdr"><span class="rhemo">'+(emoji||'🥬')+'</span><div><h3>'+name+' 손질법</h3><p>올바른 세척·손질·보관법 완벽 가이드</p></div></div>';
-  const result = hdr +
-    mkSteps('🚿','세척 방법',secs.wash) +
-    mkSteps('🔪','손질 방법',secs.prep) +
-    (cautionItems?'<div class="pcaution"><div class="pcaution-t">⚠️ 주의사항</div><ul>'+cautionItems+'</ul></div>':'') +
-    '<div class="pstorage"><div class="pstitle">📦 보관 기간</div><div class="psrow">'+
-      '<div class="pschip"><div class="psico">🌡️</div><div class="psname">상온</div><div class="psdays">'+(secs.room||'—')+'</div></div>'+
-      '<div class="pschip"><div class="psico">❄️</div><div class="psname">냉장</div><div class="psdays">'+(secs.cold||'—')+'</div></div>'+
-      '<div class="pschip"><div class="psico">🧊</div><div class="psname">냉동</div><div class="psdays">'+(secs.frozen||'—')+'</div></div>'+
-    '</div>'+(secs.tip?'<div class="rctip">💡 <strong>보관 팁:</strong> '+secs.tip+'</div>':'')+'</div>';
+  const result = hdr + mkSteps('🚿','세척 방법',secs.wash) + mkSteps('🔪','손질 방법',secs.prep) + (cautionItems?'<div class="pcaution"><div class="pcaution-t">⚠️ 주의사항</div><ul>'+cautionItems+'</ul></div>':'') + '<div class="pstorage"><div class="pstitle">📦 보관 기간</div><div class="psrow">'+'<div class="pschip"><div class="psico">🌡️</div><div class="psname">상온</div><div class="psdays">'+(secs.room||'—')+'</div></div>'+'<div class="pschip"><div class="psico">❄️</div><div class="psname">냉장</div><div class="psdays">'+(secs.cold||'—')+'</div></div>'+'<div class="pschip"><div class="psico">🧊</div><div class="psname">냉동</div><div class="psdays">'+(secs.frozen||'—')+'</div></div>'+'</div>'+(secs.tip?'<div class="rctip">💡 <strong>보관 팁:</strong> '+secs.tip+'</div>':'')+'</div>';
   prepCache[name] = result;
   document.getElementById('prepDetail' + idx).innerHTML = result;
 }
@@ -1579,17 +1559,15 @@ async function doRescan(src) {
     });
     if (!res.ok) throw new Error('API 오류: ' + res.status);
     const json = await res.json();
-    const raw = json.choices[0].message.content.replace(/\*+/g,'').replace(/#+/g,'').trim();
-    const parseScore = r => { const m = (r||'').match(/([\d.]+)/); return m ? parseFloat(m[1]) : 5.0; };
+    const raw = json.choices[0].message.content.replace(/\\*+/g,'').replace(/#+/g,'').trim();
+    const parseScore = r => { const m = (r||'').match(/([\\d.]+)/); return m ? parseFloat(m[1]) : 5.0; };
     let newScore = 5.0; let newDesc = '';
     raw.split('\\n').forEach(line => {
       if (line.includes('신선도 점수') || line.includes('종합')) newScore = parseScore(line);
       else if (line.includes('상태 설명') || line.includes('설명')) newDesc = line.slice(line.indexOf(':')+1).trim();
     });
-    // Clamp to reasonable range
     newScore = Math.max(0, Math.min(10, newScore));
 
-    // AI comment
     let aiComment = '';
     try {
       const aiRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -1602,7 +1580,7 @@ async function doRescan(src) {
       });
       if (aiRes.ok) {
         const aiJson = await aiRes.json();
-        aiComment = aiJson.choices[0].message.content.replace(/\*+/g,'').replace(/#+/g,'').trim();
+        aiComment = aiJson.choices[0].message.content.replace(/\\*+/g,'').replace(/#+/g,'').trim();
       }
     } catch(e) {}
 

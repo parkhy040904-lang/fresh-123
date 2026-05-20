@@ -1269,9 +1269,8 @@ const RECIPE_DATA = [
   }
 ];
 
-function toggleAccordion(id) {
-  const el = document.getElementById(id);
-  if (el) el.classList.toggle('open');
+function toggleAccordion(el) {
+  el.parentElement.classList.toggle('open');
 }
 
 function renderRecipes(data, containerId) {
@@ -1293,7 +1292,7 @@ function renderRecipes(data, containerId) {
         '</div>';
     }).join('');
     return '<div class="recipe-sec" id="' + secId + '">' +
-      '<div class="recipe-sec__hdr" onclick="toggleAccordion(\'' + secId + '\')">' +
+      '<div class="recipe-sec__hdr" onclick="toggleAccordion(this)">' +
         '<span class="recipe-sec__emoji">' + crop.emoji + '</span>' +
         '<span class="recipe-sec__name">' + crop.name + '</span>' +
         '<span class="acc-arrow">›</span>' +
@@ -1386,7 +1385,7 @@ function renderCrops(crops, containerId) {
       ? '<a class="crop-card__yt" href="' + crop.ytLink + '" target="_blank">▶ 동영상으로 보기</a>'
       : '';
     return '<div class="crop-card crop-card--' + crop.id + '" id="' + cardId + '">' +
-      '<div class="crop-card__header" onclick="toggleAccordion(\'' + cardId + '\')">' +
+      '<div class="crop-card__header" onclick="toggleAccordion(this)">' +
       '<span class="crop-card__emoji">' + crop.emoji + '</span>' +
       '<div><p class="crop-card__title">' + crop.name + '</p><p class="crop-card__sub">' + crop.sub + '</p></div>' +
       '<span class="acc-arrow">›</span>' +

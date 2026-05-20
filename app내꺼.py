@@ -340,6 +340,14 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .recipe-item__steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
 .recipe-item__step{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#333;line-height:1.55;}
 .recipe-item__num{min-width:20px;height:20px;background:#e8f5e9;color:#2d7a3a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;}
+.recipe-sec__hdr{cursor:pointer;}
+.recipe-sec__body{display:none;}
+.recipe-sec.open .recipe-sec__body{display:block;}
+.crop-card__header{cursor:pointer;}
+.crop-card__body{display:none;padding-top:4px;}
+.crop-card.open .crop-card__body{display:block;}
+.acc-arrow{font-size:22px;font-weight:700;margin-left:auto;flex-shrink:0;transition:transform 0.2s;line-height:1;}
+.open .acc-arrow{transform:rotate(90deg);}
 </style>
 </head>
 <body>
@@ -1261,10 +1269,16 @@ const RECIPE_DATA = [
   }
 ];
 
+function toggleAccordion(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
 function renderRecipes(data, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  container.innerHTML = data.map(crop => {
+  container.innerHTML = data.map((crop, idx) => {
+    const secId = 'rsec' + idx;
     const items = crop.recipes.map(r => {
       const stepsHtml = r.steps.map((s, i) =>
         '<li class="recipe-item__step"><span class="recipe-item__num">' + (i + 1) + '</span><span>' + s + '</span></li>'
@@ -1278,11 +1292,14 @@ function renderRecipes(data, containerId) {
         '<ol class="recipe-item__steps">' + stepsHtml + '</ol>' +
         '</div>';
     }).join('');
-    return '<div class="recipe-sec">' +
-      '<div class="recipe-sec__hdr">' +
+    return '<div class="recipe-sec" id="' + secId + '">' +
+      '<div class="recipe-sec__hdr" onclick="toggleAccordion(\'' + secId + '\')">' +
         '<span class="recipe-sec__emoji">' + crop.emoji + '</span>' +
         '<span class="recipe-sec__name">' + crop.name + '</span>' +
-      '</div>' + items + '</div>';
+        '<span class="acc-arrow">›</span>' +
+      '</div>' +
+      '<div class="recipe-sec__body">' + items + '</div>' +
+      '</div>';
   }).join('');
 }
 
@@ -1303,6 +1320,7 @@ const CROPS = [
   },
   {
     id: 'apple', emoji: '🍎', name: '사과', sub: 'Apple',
+    ytLink: 'https://www.youtube.com/shorts/lctVPdMdC4s?si=ivJ3DmTl_gw-Mkiu',
     steps: [
       '흐르는 물에 껍질을 손으로 문질러 깨끗이 씻는다',
       '꼭지 부분을 제거한다',
@@ -1322,6 +1340,7 @@ const CROPS = [
   },
   {
     id: 'cabbage', emoji: '🥬', name: '배추', sub: 'Napa Cabbage',
+    ytLink: 'https://www.youtube.com/shorts/uou5LqGheKQ?si=Z_MaCt0JYqCcXa9w',
     steps: [
       '겉잎을 2~3장 떼어낸다 (손상되거나 오염된 잎 제거)',
       '밑동을 칼로 평평하게 잘라낸다',
@@ -1333,6 +1352,7 @@ const CROPS = [
   },
   {
     id: 'onion', emoji: '🧅', name: '양파', sub: 'Onion',
+    ytLink: 'https://www.youtube.com/shorts/KTn9mUZvFoM?si=EOPVzOGcRLok2YDO',
     steps: [
       '겉의 마른 껍질을 손으로 벗겨낸다',
       '위 꼭지 부분과 뿌리 부분을 칼로 잘라낸다',
@@ -1357,21 +1377,26 @@ const CROPS = [
 function renderCrops(crops, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  container.innerHTML = crops.map(crop => {
+  container.innerHTML = crops.map((crop, idx) => {
+    const cardId = 'ccard' + idx;
     const stepsHtml = crop.steps.map((step, i) =>
       '<li class="crop-card__step"><span class="crop-card__num">' + (i + 1) + '</span><span class="crop-card__step-text">' + step + '</span></li>'
     ).join('');
     const ytBtn = crop.ytLink
       ? '<a class="crop-card__yt" href="' + crop.ytLink + '" target="_blank">▶ 동영상으로 보기</a>'
       : '';
-    return '<div class="crop-card crop-card--' + crop.id + '">' +
-      '<div class="crop-card__header">' +
+    return '<div class="crop-card crop-card--' + crop.id + '" id="' + cardId + '">' +
+      '<div class="crop-card__header" onclick="toggleAccordion(\'' + cardId + '\')">' +
       '<span class="crop-card__emoji">' + crop.emoji + '</span>' +
       '<div><p class="crop-card__title">' + crop.name + '</p><p class="crop-card__sub">' + crop.sub + '</p></div>' +
+      '<span class="acc-arrow">›</span>' +
       '</div>' +
+      '<div class="crop-card__body">' +
       '<ol class="crop-card__steps">' + stepsHtml + '</ol>' +
       '<div class="crop-card__tip">💡 ' + crop.tip + '</div>' +
-      ytBtn + '</div>';
+      ytBtn +
+      '</div>' +
+      '</div>';
   }).join('');
 }
 

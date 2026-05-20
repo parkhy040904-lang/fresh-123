@@ -184,7 +184,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
   box-shadow:0 4px 16px rgba(0,0,0,0.07);margin-top:10px;display:none;}
 .recipe-name{font-size:15px;font-weight:900;color:#111;}
 .recipe-time{font-size:11px;color:#aaa;font-weight:600;margin-top:2px;}
-.recipe-sec{font-size:11px;font-weight:800;color:#e65100;margin-top:12px;margin-bottom:5px;}
+.rbox2 .recipe-sec{font-size:11px;font-weight:800;color:#e65100;margin-top:12px;margin-bottom:5px;}
 .recipe-body{font-size:12px;color:#444;font-weight:600;line-height:1.75;}
 
 .ggrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}

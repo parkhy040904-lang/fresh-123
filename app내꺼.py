@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Scan Eat!", page_icon="🌿", layout="wide")
+st.set_page_config(page_title="Scan It!", page_icon="🌿", layout="wide")
 
 groq_key = st.secrets["GROQ_API_KEY"]
 
@@ -313,6 +313,18 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .hstat-label{font-size:10px;color:#aaa;font-weight:700;}
 .hstat-val{font-size:15px;font-weight:900;color:#222;margin-top:3px;}
 .hai-comment{background:#fffbea;border-left:3px solid #f0c040;border-radius:0 10px 10px 0;padding:10px 12px;font-size:12px;color:#555;line-height:1.65;margin-top:8px;}
+.crop-grid{display:flex;flex-direction:column;gap:12px;}
+.crop-card{background:#fff;border-radius:18px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+.crop-card__header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.crop-card__emoji{font-size:36px;flex-shrink:0;}
+.crop-card__title{font-size:15px;font-weight:900;color:#111;}
+.crop-card__sub{font-size:11px;color:#aaa;font-weight:600;margin-top:2px;}
+.crop-card__steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.crop-card__step{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#333;line-height:1.55;}
+.crop-card__num{min-width:22px;height:22px;background:#e8f5e9;color:#2d7a3a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px;}
+.crop-card__step-text{flex:1;padding-top:3px;}
+.crop-card__tip{background:#fffbea;border-left:3px solid #f0c040;border-radius:0 8px 8px 0;padding:8px 12px;font-size:11px;color:#555;line-height:1.6;}
+.crop-card__yt{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:10px 14px;background:#ff0000;border-radius:12px;color:#fff;font-size:12px;font-weight:800;text-decoration:none;}
 </style>
 </head>
 <body>
@@ -328,7 +340,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
   <div id="pageHome" class="page active">
   <div class="hdr">
     <div class="hdr-top">
-      <div class="logo">Scan Eat<em>!</em></div>
+      <div class="logo">Scan It<em>!</em></div>
       <div class="ava">🌿</div>
     </div>
     <div class="hdr-sub">안녕하세요 👋</div>
@@ -511,7 +523,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
       </div>
     </div>
 
-    <div style="text-align:center;color:#aaa;font-size:0.78rem;padding:1.5rem 0;">Scan Eat! © 2026</div>
+    <div style="text-align:center;color:#aaa;font-size:0.78rem;padding:1.5rem 0;">Scan It! © 2026</div>
 
   </div>
   </div><div id="pageRecipe" class="page">
@@ -525,9 +537,11 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
   <div id="pagePrep" class="page">
     <div class="tab-hdr">
       <div class="tab-hdr-title">🔪 손질법</div>
-      <div class="tab-hdr-sub">농산물을 선택하면 손질법을 볼 수 있어요</div>
+      <div class="tab-hdr-sub">신선한 농산물 손질 가이드</div>
     </div>
-    <div class="scroll plist" id="prepList">__PREP_LIST__</div>
+    <div class="scroll" style="padding:12px 14px 24px;">
+      <div class="crop-grid" id="cropGrid"></div>
+    </div>
   </div>
 
   <div id="pageHistory" class="page">
@@ -1175,18 +1189,21 @@ async function loadRecipeForProduce(name, idx, emoji) {
   document.getElementById('recipeDetail' + idx).innerHTML = result;
 }
 
-const STATIC_PREP_DATA = {
-  '수박': {
+const CROPS = [
+  {
+    id: 'watermelon', emoji: '🍉', name: '수박', sub: 'Watermelon',
+    ytLink: 'https://www.youtube.com/shorts/qnVyhXTte4g?si=_65NYMplLsmEm4sR',
     steps: [
-      '수박 겉면을 흐르는 물에 솔로 깨끗이 씻는다',
-      '도마 위에 세워놓고 반으로 자른다',
-      '반쪽을 다시 반으로 잘라 4등분한다',
-      '껍질과 과육 사이를 칼로 분리하거나, 과육만 깍둑썰기한다',
-      '씨를 포크나 손으로 제거한다'
+      '수박을 흐르는 물에 깨끗이 씻는다',
+      '수박을 반으로 자른다',
+      '자른 수박을 두 번 더 반으로 잘라 삼각뿔 모양으로 만든다',
+      '각 모서리 부분에 칼을 넣어 과육만 분리한다',
+      '원하는 크기로 조각으로 자른다'
     ],
     tip: '자르기 전 냉장 보관하면 더 시원하게 즐길 수 있어요'
   },
-  '사과': {
+  {
+    id: 'apple', emoji: '🍎', name: '사과', sub: 'Apple',
     steps: [
       '흐르는 물에 껍질을 손으로 문질러 깨끗이 씻는다',
       '꼭지 부분을 제거한다',
@@ -1195,16 +1212,17 @@ const STATIC_PREP_DATA = {
     ],
     tip: '갈변 방지를 위해 자른 후 소금물이나 레몬물에 잠깐 담가두세요'
   },
-  '딸기': {
+  {
+    id: 'strawberry', emoji: '🍓', name: '딸기', sub: 'Strawberry',
     steps: [
-      '꼭지를 떼지 말고 물에 1~2분 담가 농약을 불린다',
       '흐르는 물에 가볍게 헹군다 (세게 문지르지 않는다)',
       '물기를 키친타월로 조심스럽게 제거한다',
       '꼭지를 손으로 비틀거나 칼로 잘라 제거한다'
     ],
     tip: '씻기 전 꼭지를 제거하면 물이 들어가 맛이 떨어지므로 반드시 나중에 제거하세요'
   },
-  '배추': {
+  {
+    id: 'cabbage', emoji: '🥬', name: '배추', sub: 'Napa Cabbage',
     steps: [
       '겉잎을 2~3장 떼어낸다 (손상되거나 오염된 잎 제거)',
       '밑동을 칼로 평평하게 잘라낸다',
@@ -1214,75 +1232,51 @@ const STATIC_PREP_DATA = {
     ],
     tip: '김치용이라면 소금에 절이기 전, 요리용이라면 씻은 후 바로 사용하세요'
   },
-  '양파': {
+  {
+    id: 'onion', emoji: '🧅', name: '양파', sub: 'Onion',
     steps: [
       '겉의 마른 껍질을 손으로 벗겨낸다',
       '위 꼭지 부분과 뿌리 부분을 칼로 잘라낸다',
-      '반으로 자른 후 흐르는 물에 헹군다',
+      '반으로 잘라 흐르는 물에 헹군다',
       '용도에 따라 채썰기, 깍둑썰기, 링 모양으로 썬다'
     ],
     tip: '눈물을 줄이려면 냉장 보관 후 차갑게 썰거나, 물 속에서 자르세요'
   },
-  '무': {
+  {
+    id: 'radish', emoji: '🫜', name: '무', sub: 'Radish (Daikon)',
+    ytLink: 'https://www.youtube.com/shorts/qnVyhXTte4g?si=_65NYMplLsmEm4sR',
     steps: [
-      '무 표면을 수세미나 솔로 문질러 흐르는 물에 씻는다',
-      '윗부분 잎 달린 꼭지와 뿌리 끝을 잘라낸다',
-      '필러로 껍질을 얇게 벗긴다 (조림용은 껍질째 가능)',
-      '용도에 따라 깍둑썰기, 반달썰기, 채썰기로 자른다'
+      '흐르는 물에 흙을 꼼꼼히 씻어낸다',
+      '무청을 잘라낸다 (육수 활용 가능)',
+      '필러로 껍질을 깎아낸다',
+      '원하는 크기나 모양으로 썬다'
     ],
     tip: '무 윗부분은 달고 아래로 갈수록 매운 맛이 강해요. 용도에 맞게 부위를 선택하세요'
   }
-};
+];
 
-async function loadPrepForProduce(name, idx, emoji) {
-  if (STATIC_PREP_DATA[name]) {
-    const data = STATIC_PREP_DATA[name];
-    const stepsHtml = data.steps.map((s,i) => '<li><span class="pstep-n">'+(i+1)+'</span>'+s+'</li>').join('');
-    const hdr = '<div class="rcipe-hdr"><span class="rhemo">'+(emoji||'🥬')+'</span><div><h3>'+name+' 손질법</h3><p>올바른 손질 방법 가이드</p></div></div>';
-    const section = '<div class="psection"><div class="pstitle">🔪 손질 방법</div><ol class="pstep-list">'+stepsHtml+'</ol></div>';
-    const tip = data.tip ? '<div class="rctip">💡 <strong>팁:</strong> '+data.tip+'</div>' : '';
-    const result = hdr + section + tip;
-    prepCache[name] = result;
-    document.getElementById('prepDetail'+idx).innerHTML = result;
-    return;
-  }
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-      messages: [{role:'user', content:
-        name + '의 손질법을 아래 형식으로만 답하고 다른 말은 절대 쓰지 마세요.\\n\\n세척법:\\n1. 단계\\n2. 단계\\n3. 단계\\n\\n손질법:\\n1. 단계\\n2. 단계\\n3. 단계\\n\\n주의사항:\\n• 주의사항1\\n• 주의사항2\\n\\n상온보관: (기간, 예: 3~5일)\\n냉장보관: (기간, 예: 2~4주)\\n냉동보관: (기간, 예: 6개월)\\n보관팁: (짧은 보관 팁 한 줄)'
-      }]
-    })
-  });
-  if (!res.ok) throw new Error('API ' + res.status);
-  const json = await res.json();
-  const raw = json.choices[0].message.content.replace(/\\*+/g,'').replace(/#+/g,'').trim();
-  const secs = {}; let ck = null;
-  raw.split('\\n').forEach(line => {
-    const t = line.trim(); if (!t) return;
-    const ci = t.indexOf(':'); const k = ci>-1 ? t.slice(0,ci).trim() : ''; const v = ci>-1 ? t.slice(ci+1).trim() : '';
-    if (k.includes('세척')) { ck='wash'; secs[ck]=''; return; }
-    if (k.includes('손질')) { ck='prep'; secs[ck]=''; return; }
-    if (k.includes('주의')) { ck='caution'; secs[ck]=''; return; }
-    if (k.includes('상온')) { secs.room=v; ck=null; return; }
-    if (k.includes('냉장')) { secs.cold=v; ck=null; return; }
-    if (k.includes('냉동')) { secs.frozen=v; ck=null; return; }
-    if (k.includes('팁')) { secs.tip=v; ck=null; return; }
-    if (ck!==null) secs[ck]=(secs[ck]||'')+t+'\\n';
-  });
-  const mkSteps = (ico, title, txt) => {
-    const items = (txt||'').split('\\n').filter(s=>s.trim()).map((s,i)=>'<li><span class="pstep-n">'+(i+1)+'</span>'+s.replace(/^[\\d]+[.)\\s]+/,'')+'</li>').join('');
-    if (!items) return '';
-    return '<div class="psection"><div class="pstitle">'+ico+' '+title+'</div><ol class="pstep-list">'+items+'</ol></div>';
-  };
-  const cautionItems = (secs.caution||'').split('\\n').filter(s=>s.trim()).map(s=>'<li>'+s.replace(/^[•·\\-]+\\s*/,'')+'</li>').join('');
-  const hdr = '<div class="rcipe-hdr"><span class="rhemo">'+(emoji||'🥬')+'</span><div><h3>'+name+' 손질법</h3><p>올바른 세척·손질·보관법 완벽 가이드</p></div></div>';
-  const result = hdr + mkSteps('🚿','세척 방법',secs.wash) + mkSteps('🔪','손질 방법',secs.prep) + (cautionItems?'<div class="pcaution"><div class="pcaution-t">⚠️ 주의사항</div><ul>'+cautionItems+'</ul></div>':'') + '<div class="pstorage"><div class="pstitle">📦 보관 기간</div><div class="psrow">'+'<div class="pschip"><div class="psico">🌡️</div><div class="psname">상온</div><div class="psdays">'+(secs.room||'—')+'</div></div>'+'<div class="pschip"><div class="psico">❄️</div><div class="psname">냉장</div><div class="psdays">'+(secs.cold||'—')+'</div></div>'+'<div class="pschip"><div class="psico">🧊</div><div class="psname">냉동</div><div class="psdays">'+(secs.frozen||'—')+'</div></div>'+'</div>'+(secs.tip?'<div class="rctip">💡 <strong>보관 팁:</strong> '+secs.tip+'</div>':'')+'</div>';
-  prepCache[name] = result;
-  document.getElementById('prepDetail' + idx).innerHTML = result;
+function renderCrops(crops, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = crops.map(crop => {
+    const stepsHtml = crop.steps.map((step, i) =>
+      '<li class="crop-card__step"><span class="crop-card__num">' + (i + 1) + '</span><span class="crop-card__step-text">' + step + '</span></li>'
+    ).join('');
+    const ytBtn = crop.ytLink
+      ? '<a class="crop-card__yt" href="' + crop.ytLink + '" target="_blank">▶ 동영상으로 보기</a>'
+      : '';
+    return '<div class="crop-card crop-card--' + crop.id + '">' +
+      '<div class="crop-card__header">' +
+      '<span class="crop-card__emoji">' + crop.emoji + '</span>' +
+      '<div><p class="crop-card__title">' + crop.name + '</p><p class="crop-card__sub">' + crop.sub + '</p></div>' +
+      '</div>' +
+      '<ol class="crop-card__steps">' + stepsHtml + '</ol>' +
+      '<div class="crop-card__tip">💡 ' + crop.tip + '</div>' +
+      ytBtn + '</div>';
+  }).join('');
 }
+
+renderCrops(CROPS, 'cropGrid');
 
 function showPage(page) {
   const map = {home:'pageHome', recipe:'pageRecipe', prep:'pagePrep', history:'pageHistory'};
@@ -1621,6 +1615,5 @@ async function doRescan(src) {
 </html>"""
 
 html = html.replace('__RECIPE_LIST__', recipe_list_html)
-html = html.replace('__PREP_LIST__', prep_list_html)
 html = html.replace('__GROQ_KEY__', groq_key)
 components.html(html, height=920, scrolling=False)

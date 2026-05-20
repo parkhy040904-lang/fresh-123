@@ -327,8 +327,8 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .recipe-grid{display:flex;flex-direction:column;gap:12px;}
 .recipe-sec{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.07);}
 .recipe-sec__hdr{background:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;}
-.recipe-sec__emoji{font-size:28px;}
-.recipe-sec__name{font-size:15px;font-weight:900;color:#111;}
+.recipe-sec__emoji{font-size:26px;}
+.recipe-sec__name{font-size:14px;font-weight:900;color:#111;}
 .recipe-item{padding:14px 16px;border-bottom:1px solid #f0f0f0;}
 .recipe-item:last-child{border-bottom:none;}
 .recipe-item__hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}

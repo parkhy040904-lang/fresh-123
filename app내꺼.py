@@ -21,11 +21,17 @@ PRODUCE_DATA = [
     ('감자','🥔'),('당근','🥕'),('오이','🥒'),('양파','🧅'),
     ('무','🫜'),('수박','🍉'),('포도','🍇'),('바나나','🍌'),
 ]
-def make_produce_list(t):
+PREP_PRODUCE_DATA = [
+    ('수박','🍉'),('사과','🍎'),('딸기','🍓'),
+    ('배추','🥬'),('양파','🧅'),('무','🫜'),
+]
+def make_produce_list(t, data=None):
+    if data is None:
+        data = PRODUCE_DATA
     badge = '레시피 3개' if t=='recipe' else '세척·손질·보관'
     bc = ' blue' if t=='prep' else ''
     rows=[]
-    for i,(name,emoji) in enumerate(PRODUCE_DATA):
+    for i,(name,emoji) in enumerate(data):
         rows.append(
             f'<div class="pitem-wrap" id="{t}Wrap{i}">'
             f'<div class="pitem" onclick="toggleProduceItem(\'{t}\',{i},\'{name}\',\'{emoji}\')">'
@@ -38,7 +44,7 @@ def make_produce_list(t):
     return ''.join(rows)
 
 recipe_list_html = make_produce_list('recipe')
-prep_list_html   = make_produce_list('prep')
+prep_list_html   = make_produce_list('prep', PREP_PRODUCE_DATA)
 
 html = """<!DOCTYPE html>
 <html lang="ko">

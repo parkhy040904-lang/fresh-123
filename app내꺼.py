@@ -324,7 +324,22 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .crop-card__num{min-width:22px;height:22px;background:#e8f5e9;color:#2d7a3a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px;}
 .crop-card__step-text{flex:1;padding-top:3px;}
 .crop-card__tip{background:#fffbea;border-left:3px solid #f0c040;border-radius:0 8px 8px 0;padding:8px 12px;font-size:11px;color:#555;line-height:1.6;}
-.crop-card__yt{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:10px 14px;background:#ff0000;border-radius:12px;color:#fff;font-size:12px;font-weight:800;text-decoration:none;}
+.crop-card__yt{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:10px 14px;background:#2d7a3a;border-radius:12px;color:#fff;font-size:12px;font-weight:800;text-decoration:none;}
+.recipe-grid{display:flex;flex-direction:column;gap:14px;}
+.recipe-sec{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+.recipe-sec__hdr{background:linear-gradient(135deg,#1b5e20,#388e3c);padding:14px 16px;display:flex;align-items:center;gap:10px;}
+.recipe-sec__emoji{font-size:28px;}
+.recipe-sec__name{font-size:15px;font-weight:900;color:#fff;}
+.recipe-item{padding:14px 16px;border-bottom:1px solid #f0f0f0;}
+.recipe-item:last-child{border-bottom:none;}
+.recipe-item__hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
+.recipe-item__title{font-size:13px;font-weight:900;color:#111;flex:1;}
+.recipe-item__yt{display:flex;align-items:center;gap:5px;padding:6px 10px;background:#2d7a3a;border-radius:10px;color:#fff;font-size:11px;font-weight:800;text-decoration:none;flex-shrink:0;}
+.recipe-item__ingr{background:#f7f9f7;border-radius:10px;padding:9px 12px;margin-bottom:10px;font-size:11px;color:#444;line-height:1.7;font-weight:600;}
+.recipe-item__ingr-lbl{font-size:11px;font-weight:800;color:#2d7a3a;display:block;margin-bottom:4px;}
+.recipe-item__steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.recipe-item__step{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#333;line-height:1.55;}
+.recipe-item__num{min-width:20px;height:20px;background:#e8f5e9;color:#2d7a3a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;}
 </style>
 </head>
 <body>
@@ -405,7 +420,6 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
         <div class="tags" id="rtags"></div>
         <div class="tip" id="rtip"></div>
         <div class="btn-row" id="btnRow">
-          <button class="recipe-btn" id="recipeBtn" onclick="fetchRecipe()">🍳 레시피 보기</button>
           <button class="compare-btn" onclick="startCompare()">📊 비교하기</button>
         </div>
         <button class="fav-btn" id="favBtn" onclick="toggleFav()">⭐ 찜하기</button>
@@ -529,9 +543,11 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
   </div><div id="pageRecipe" class="page">
     <div class="tab-hdr">
       <div class="tab-hdr-title">🍳 레시피</div>
-      <div class="tab-hdr-sub">농산물을 선택하면 레시피를 볼 수 있어요</div>
+      <div class="tab-hdr-sub">농산물별 레시피 모음</div>
     </div>
-    <div class="scroll plist" id="recipeList">__RECIPE_LIST__</div>
+    <div class="scroll" style="padding:12px 14px 24px;">
+      <div class="recipe-grid" id="recipeGrid"></div>
+    </div>
   </div>
 
   <div id="pagePrep" class="page">
@@ -1040,159 +1056,242 @@ async function analyzeCompare() {
   }
 }
 
-async function fetchRecipe() {
-  const produce = document.getElementById('rname').textContent;
-  const rbox2 = document.getElementById('rbox2');
-  rbox2.style.display = 'block';
-  rbox2.innerHTML = '<div style="text-align:center;padding:24px;color:#aaa;font-size:13px;font-weight:700;">🍳 레시피 불러오는 중...</div>';
-  rbox2.scrollIntoView({behavior:'smooth', block:'nearest'});
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + GROQ_API_KEY,
-        'Content-Type': 'application/json'
+const RECIPE_DATA = [
+  {
+    emoji: '🥬', name: '배추',
+    recipes: [
+      {
+        title: '김치',
+        ytLink: 'https://youtu.be/K55CPyYTUJI?si=ya-HyUUSH9e2x1_T',
+        ingredients: '절인배추 12kg, 굴 1kg, 물(찹쌀풀용) 1.5L, 찹쌀가루 100g, 소고기 다시다 2큰술(20g), MSG 2큰술(20g), 굵은고춧가루 750g, 다진마늘 500g, 새우젓 350g, 다진생강 25g, 멸치액젓 500g, 꽃소금 75g, 설탕 200g, 무 1.5kg, 쪽파 700g, 홍갓 500g, 청갓 700g, 알타리무청 6줄기, 당근 1/3개(80g), 미나리 200g',
+        steps: [
+          '물에 찹쌀가루를 넣어 풀어준다',
+          '찹쌀물을 냄비에 붓고 중불에서 바닥을 긁어가며 끓인다',
+          '찹쌀 풀에 소고기 다시다 2큰술을 넣어 섞어준다',
+          '농도가 잡히면 고춧가루, MSG를 넣어 섞어준다',
+          '무는 채칼을 이용하여 썰어준다',
+          '채 썬 무에 꽃소금, 멸치액젓, 새우젓을 넣어 절여준다',
+          '갓은 뿌리를 제거하고 줄기 3cm, 이파리 2cm 길이로 자른다',
+          '무청, 쪽파는 3cm 길이로 잘라 준비한다',
+          '당근은 채칼을 이용하여 썰어준다',
+          '손질한 채소에 절인 무, 불린 고춧가루, 간 마늘, 간 생강, 황설탕을 넣어 섞어준다',
+          '절인 배추에 김칫소를 한 장 한 장 얇게 발라준다',
+          '골고루 양념이 묻으면 큰 이파리로 감싸 모양을 잡는다',
+          '김치통에 담은 후 꾹꾹 눌러 틈이 생기지 않게 한다',
+          '김치통이 채워지면 남은 배추 이파리로 덮어 보관한다'
+        ]
       },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        messages: [{
-          role: 'user',
-          content: '재료: ' + produce + '\\n\\n이 재료가 원래부터 들어가는 잘 알려진 요리의 레시피를 알려주세요.\\n(예시: 무→무국/깍두기, 사과→사과잼/사과샐러드, 오이→오이냉국/오이소박이, 당근→당근라페/잡채)\\n\\n주의: 억지로 재료를 끼워 넣은 요리는 안 됩니다. 반드시 그 재료가 원래 들어가는 음식이어야 합니다.' + (shownRecipes.length ? '\\n이미 보여준 요리(' + shownRecipes.join(', ') + ')는 제외하고 다른 요리를 알려주세요.' : '') + '\\n아래 형식으로만 답하고 다른 말은 절대 쓰지 마세요.\\n\\n요리이름: (실제 존재하는 요리명)\\n조리시간: (총 소요시간)\\n재료: (2인분 기준, 재료명 + 정확한 양을 쉼표로 나열. 예: 무 300g, 물 500ml, 국간장 1큰술)\\n조리법: (1. 단계. 2. 단계. 형식으로 불 세기·시간 포함해 상세하게)'
-        }]
-      })
-    });
-    if (!res.ok) throw new Error('API ' + res.status);
-    const json = await res.json();
-    const raw = json.choices[0].message.content
-      .replace(/\*+/g, '').replace(/#+/g, '').replace(/\$/g, '')
-      .replace(/`+/g, '').replace(/_{2,}/g, '')
-      .trim();
-    const recipeKeys = [
-      {key:'요리이름', kws:['요리이름','레시피명','음식이름','요리 이름','레시피 이름','dish']},
-      {key:'조리시간', kws:['조리시간','조리 시간','소요시간','요리시간']},
-      {key:'재료',    kws:['재료','ingredients']},
-      {key:'조리법',  kws:['조리법','조리 방법','만드는 방법','만들기','instructions']},
-    ];
-    const sections = {};
-    let curKey = null;
-    raw.split('\\n').forEach(line => {
-      const ci = line.indexOf(':');
-      const maybeKey = ci > -1 ? line.slice(0, ci).trim() : '';
-      const matched = recipeKeys.find(r => r.kws.some(kw => maybeKey.includes(kw)) && maybeKey.length < 20);
-      if (matched) {
-        curKey = matched.key;
-        sections[curKey] = line.slice(ci + 1).trim();
-      } else if (curKey && line.trim()) {
-        sections[curKey] += '\\n' + line.trim();
+      {
+        title: '배추전',
+        ytLink: 'https://youtu.be/jN6rB-bUQXM?si=jVpN6990zIlrGPdZ',
+        ingredients: '[배추전] 배추, 부침가루, 정수물, 식용유 / [양념장] 청양고추, 대파, 진간장, 식초',
+        steps: [
+          '배추는 세척 후 밑동 1cm 위쪽을 잘라 낱장으로 떨어지게 한다',
+          '줄기 부분을 칼 옆면으로 두드려 편다',
+          '물기 있는 상태로 부침가루를 뿌려 골고루 묻힌다',
+          '부침가루와 물을 1:1 비율로 섞어 물반죽을 만든다',
+          '프라이팬을 강불에 올려 예열 후 식용유를 넉넉히 두른다',
+          '배추에 물반죽을 얇게 입혀 중불에서 앞뒤로 노릇하게 구워낸다',
+          '[양념장] 대파·청양고추를 0.3cm로 썰고 간장과 식초를 1:2로 섞어 곁들인다'
+        ]
       }
-    });
-    const name  = sections['요리이름'] || produce + ' 레시피';
-    shownRecipes.push(name);
-    const time  = sections['조리시간'] || '—';
-    const ingr  = sections['재료'] || '';
-    const steps = sections['조리법'] || '';
-    const ingrHtml  = ingr.split(/[,\\n]/).map(s => s.trim()).filter(Boolean).map(s => '• ' + s).join('<br>');
-    const stepsHtml = steps.split('\\n').map(s => s.trim()).filter(Boolean).join('<br>');
-    rbox2.innerHTML =
-      '<div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:14px;padding:14px;margin-bottom:14px;">' +
-        '<div style="font-size:11px;color:#2d7a3a;font-weight:800;margin-bottom:4px;">🍳 추천 레시피</div>' +
-        '<div style="font-size:17px;font-weight:900;color:#1b5e20;">' + name + '</div>' +
-        '<div style="font-size:11px;color:#888;font-weight:600;margin-top:3px;">⏱ ' + time + '</div>' +
-      '</div>' +
-      '<div class="recipe-sec">🛒 재료</div>' +
-      '<div class="recipe-body">' + ingrHtml + '</div>' +
-      '<div class="recipe-sec">🍽️ 조리법</div>' +
-      '<div class="recipe-body">' + stepsHtml + '</div>' +
-      '<button onclick="fetchRecipe()" style="width:100%;margin-top:14px;padding:10px;background:#f0f4f0;border:none;border-radius:12px;font-size:13px;font-weight:800;color:#2d7a3a;cursor:pointer;font-family:Nunito,sans-serif;">🔄 다른 레시피 보기</button>';
-  } catch(err) {
-    rbox2.innerHTML = '<div style="text-align:center;padding:20px;color:#e53935;font-size:13px;font-weight:700;">오류: ' + err.message + '</div>';
+    ]
+  },
+  {
+    emoji: '🧅', name: '양파',
+    recipes: [
+      {
+        title: '양파볶음',
+        ytLink: 'https://youtu.be/xuO5Gvb83jk?si=d3qhhz1XhkcoG3Bk',
+        ingredients: '양파 2개, 마늘 반 큰 술, 쪽파(고명) 약간, 식용유 2큰술 / [양념] 간장 2큰술, 설탕 반큰술, 들기름 1큰술, 통깨 약간, 후추 약간',
+        steps: [
+          '양파를 깨끗이 씻어 두툼하게 썰어준다',
+          '뭉쳐있는 양파를 하나하나 떼어준다',
+          '중불 팬에 식용유 2큰술을 두르고 마늘 반 큰술을 볶는다',
+          '마늘향이 올라오면 양파를 넣어 볶는다',
+          '양파가 노릇해지면 간장 2큰술, 설탕 반큰술을 넣고 강불에서 볶는다',
+          '수분이 줄면 통깨와 후추를 뿌리고 약불에서 20초 볶는다',
+          '약불을 유지하고 들기름 1큰술을 두른다'
+        ]
+      },
+      {
+        title: '어니언 스프',
+        ytLink: 'https://youtu.be/1O3kG9DQt0s?si=psH1HFpFp-i22VG3',
+        ingredients: '양파 1kg, 그뤼에르 치즈 100-200g, 버터 40g, 와인 100ml, 마늘 15g, 바게트, 소금, 후추, 설탕, 육수(치킨·비프·야채 중 택1) 1000ml',
+        steps: [
+          '양파를 2-3mm 두께로 썰어준다',
+          '마늘을 적당히 다져준다',
+          '두꺼운 냄비에 버터를 녹이고 양파를 갈색빛이 날 때까지 충분히 볶는다',
+          '다진마늘을 넣어 2-3분 볶는다',
+          '육수를 넣고 소금간을 한다',
+          '뚜껑을 닫고 약불에서 20분 끓여 맛을 우려낸다',
+          '어니언 스프용 용기에 스프를 담고 미리 구워둔 바게트를 올린다',
+          '치즈를 올려 230-250도 오븐에 5-10분 굽는다',
+          '취향에 따라 후추와 타임, 오일을 올려 완성한다'
+        ]
+      }
+    ]
+  },
+  {
+    emoji: '🫜', name: '무',
+    recipes: [
+      {
+        title: '무 생채',
+        ytLink: 'https://youtu.be/dXN1dlsYdJI?si=6EujJRSSDkgaQTED',
+        ingredients: '무 1/2개(700g), 고운고춧가루 1/4컵(20g), 황설탕 2큰술(20g), 간마늘 1큰술(20g), 식초 1/4컵(40g), 꽃소금 2큰술(20g), 대파 1컵(80g), 깨소금 1큰술(5g)',
+        steps: [
+          '무는 깨끗이 세척하여 껍질을 제거한다',
+          '채칼로 일정한 두께로 썰어 준비한다',
+          '대파는 송송 썬다',
+          '채 썬 무에 꽃소금, 황설탕, 고운 고춧가루, 간 마늘, 식초, 대파를 넣고 잘 버무린다',
+          '깨소금을 넣어 섞은 후 마무리한다'
+        ]
+      },
+      {
+        title: '소고기 무국',
+        ytLink: 'https://youtu.be/vG07DHeNH9c?si=eSr_AK8134_bqNve',
+        ingredients: '무 1과1/2컵(230g), 소양지 1컵(150g), 양파 1/4개(50g), 참기름 1큰술(8g), 식용유 1큰술(8g), 대파 1/3컵(30g), 간마늘 1큰술(15g), 국간장 2큰술(20g), 멸치액젓 2큰술(20g), 꽃소금 1/2큰술(5g), 후춧가루 적당량, 물 1.5L',
+        steps: [
+          '무는 사방 3cm 정도로 편 썰기 하여 준비한다',
+          '소고기는 핏기를 제거하여 준비한다',
+          '대파는 송송·어슷 썰고 양파는 채 썰어 준비한다',
+          '냄비에 참기름, 식용유를 두르고 소고기를 넣어 볶는다',
+          '고기 겉면이 익으면 무를 넣어 볶는다',
+          '물, 간마늘, 국간장, 멸치액젓을 넣고 중불에서 20분 끓인다',
+          '소고기가 부드러워지면 양파를 넣어 끓인다',
+          '소금으로 간을 맞추고 대파, 후추를 넣어 마무리한다'
+        ]
+      }
+    ]
+  },
+  {
+    emoji: '🍉', name: '수박',
+    recipes: [
+      {
+        title: '수박 화채',
+        ytLink: 'https://youtu.be/wAktJuv7REY?si=O4zOTvsWzrrgFo51',
+        ingredients: '수박(속 부분) 1/4통(800g), 후르츠칵테일 1/2캔(270g), 흰우유 1/5컵(400ml), 사이다 1캔(250ml), 황설탕 4큰술(48g), 얼음 적당량',
+        steps: [
+          '수박은 사방 2cm 주사위 모양으로 썬다 (칼과 도마는 미리 깨끗이 씻어주세요)',
+          '후르츠칵테일은 원액과 함께 준비한다',
+          '넓은 볼에 흰 우유, 사이다, 황설탕을 넣고 섞는다',
+          '썰어 둔 수박과 후르츠칵테일을 우유에 넣고 섞는다',
+          '얼음을 띄워 완성한다'
+        ]
+      },
+      {
+        title: '수박 오이 냉국',
+        ytLink: 'https://youtu.be/qI1LRerUWXQ?si=fJoyUukgCfgQNbS',
+        ingredients: '수박(속 부분) 1/8통(400g), 오이 약 1/2개(100g), 정수 물 2와1/2컵(450ml), 황설탕 4와1/2큰술(54g), 환만식초 4와1/2큰술(36g), 진간장 1과1/2큰술(15g), 꽃소금 약간, 얼음 적당량',
+        steps: [
+          '수박은 사방 2cm 깍둑 썰기 한다',
+          '오이는 반 갈라 얇게 편 썬다',
+          '넓은 볼에 물, 황설탕, 진간장, 환만식초, 꽃소금을 넣고 섞어 냉국 육수를 만든다',
+          '썰어놓은 수박과 오이를 육수에 넣고 섞는다',
+          '얼음을 띄워 완성한다'
+        ]
+      }
+    ]
+  },
+  {
+    emoji: '🍎', name: '사과',
+    recipes: [
+      {
+        title: '사과 파이',
+        ytLink: 'https://youtu.be/jVH2k4yNi4o?si=u7ur2inGZ1ye-bSK',
+        ingredients: '사과조림 1컵(180g), 중력분 1과1/2컵(150g), 황설탕 1/2컵(80g), 달걀 1개(60g), 우유 1/3컵(65g), 꽃소금 1/2큰술(2g), 베이킹파우더 1큰술(8g), 스틱버터 1/2개(40g), 스틱버터(코팅용) 적당량',
+        steps: [
+          '버터를 전자레인지에 1분 돌려 녹인 후 식힌다',
+          '큰 볼에 달걀, 황설탕을 설탕이 녹을 때까지 거품기로 섞는다',
+          '우유를 넣고 섞은 후 꽃소금, 버터를 조금씩 넣어가며 섞는다',
+          '중력분, 베이킹파우더를 넣고 뭉치지 않도록 섞는다',
+          '사과조림을 넣고 섞어준다',
+          '오븐 용기 안쪽에 버터를 얇게 바른다',
+          '반죽을 용기에 넣고 바닥을 쳐 공기를 제거한다',
+          '에어프라이어 150도에서 10분 예열 후 30분 굽는다',
+          '파이가 구워지면 용기에서 분리해 먹기 좋은 크기로 자른다',
+          '바닐라 아이스크림, 시나몬 가루를 곁들여 완성한다'
+        ]
+      },
+      {
+        title: '사과 고르곤졸라',
+        ytLink: 'https://youtu.be/jVH2k4yNi4o?si=u7ur2inGZ1ye-bSK',
+        ingredients: '또띠아(20cm) 1장(45g), 사과조림 1컵(180g), 모짜렐라치즈 1컵(110g), 물 2큰술(10g), 고르곤졸라치즈 적당량, 파슬리 가루 적당량',
+        steps: [
+          '프라이팬을 약불에서 예열한다',
+          '또띠아에 사과조림을 넓게 펼친다',
+          '모짜렐라치즈를 사과조림 위에 골고루 뿌린다',
+          '고르곤졸라 치즈를 잘게 잘라 모짜렐라 위에 올린다',
+          '예열된 프라이팬에 물 2큰술을 넣는다',
+          '토핑한 피자를 프라이팬에 넣는다',
+          '가장 약불에서 뚜껑을 덮고 치즈가 녹을 때까지 굽는다',
+          '완성 접시에 꺼내 파슬리가루를 뿌려 완성한다'
+        ]
+      }
+    ]
+  },
+  {
+    emoji: '🍓', name: '딸기',
+    recipes: [
+      {
+        title: '딸기잼',
+        ytLink: 'https://youtu.be/fUAl5Z2zjvE?si=LZBYK9zyAIWUrFCo',
+        ingredients: '딸기 1kg, 황설탕 2컵(320g), 소금 1/2스푼',
+        steps: [
+          '딸기를 얇게 슬라이스하고 누름도구로 으깨준다',
+          '황설탕 2컵과 소금 1/2스푼을 넣고 저어준다',
+          '30분동안 끓여준다 (색이 예쁘려면 거품을 걷어낸다)'
+        ]
+      },
+      {
+        title: '딸기 티라미수',
+        ytLink: 'https://youtu.be/WtCaqeozjH4?si=Z-TaR7hl6zZU7uMF',
+        ingredients: '생크림 75g, 크림치즈 150g, 연유 두큰술, 황설탕 50g, 레몬즙 5큰술, 딸기 500g, 애플민트',
+        steps: [
+          '딸기를 다양한 모양으로 썰어준다',
+          '자른 딸기에 설탕, 레몬즙을 넣어 한 시간 절여준다',
+          '생크림, 설탕을 핸드믹서로 잘 섞어준다',
+          '크림치즈, 연유를 넣어 섞어준다',
+          '준비한 용기에 절인 딸기를 넣고 크림을 올린다',
+          '다시 한 번 반복해 넣어준다',
+          '애플민트를 올려 완성한다'
+        ]
+      }
+    ]
   }
-}
+];
 
-const recipeCache = {};
-const prepCache = {};
-
-async function toggleProduceItem(type, idx, name, emoji) {
-  const wrap = document.getElementById(type + 'Wrap' + idx);
-  const detail = document.getElementById(type + 'Detail' + idx);
-  const isOpen = wrap.classList.contains('open');
-  document.querySelectorAll('#' + (type === 'recipe' ? 'recipeList' : 'prepList') + ' .pitem-wrap.open').forEach(el => {
-    el.classList.remove('open');
-    el.querySelector('.pitem-detail').style.display = 'none';
-  });
-  if (isOpen) return;
-  wrap.classList.add('open');
-  detail.style.display = 'block';
-  const cache = type === 'recipe' ? recipeCache : prepCache;
-  if (cache[name]) { detail.innerHTML = cache[name]; return; }
-  detail.innerHTML = '<div style="text-align:center;padding:14px;color:#aaa;font-size:12px;font-weight:700;">⏳ 불러오는 중...</div>';
-  try {
-    if (type === 'recipe') await loadRecipeForProduce(name, idx, emoji);
-    else await loadPrepForProduce(name, idx, emoji);
-  } catch(e) {
-    detail.innerHTML = '<div style="color:#e53935;font-size:12px;font-weight:700;padding:8px;">오류: ' + e.message + '</div>';
-  }
-}
-
-async function loadRecipeForProduce(name, idx, emoji) {
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-      messages: [{role:'user', content:
-        '재료: ' + name + '\\n\\n이 재료가 주재료인 대중적이고 자주 해먹는 한국 가정식 요리 3가지 레시피를 알려주세요.\\n(예: 사과→사과잼·사과샐러드, 무→무국·깍두기, 딸기→딸기주스·딸기잼, 감자→감자볶음·감자조림·감자전, 배추→배추된장국·배추볶음)\\n주의: 장아찌·절임처럼 생소한 요리 말고, 집에서 자주 해먹는 친숙한 요리로만 추천하세요.\\n반드시 "---"으로 각 레시피를 구분하고 아래 형식으로만 답하세요. 다른 말은 절대 쓰지 마세요.\\n\\n요리이름: (이름)\\n난이도: (쉬움/보통/어려움 중 하나)\\n조리시간: (총 소요시간)\\n인분: (예: 2인분)\\n재료: (2인분 기준, 재료명+양 쉼표 나열)\\n조리법: (1. 단계 2. 단계 형식)\\n팁: (짧은 요리 팁 한 줄)\\n---'
-      }]
-    })
-  });
-  if (!res.ok) throw new Error('API ' + res.status);
-  const json = await res.json();
-  const raw = json.choices[0].message.content.replace(/\\*+/g,'').replace(/#+/g,'').trim();
-  const blocks = raw.split(/---+/).filter(b => b.trim());
-  const recipesHtml = blocks.slice(0, 3).map(block => {
-    const secs = {}; let ck = null;
-    block.trim().split('\\n').forEach(line => {
-      const ci = line.indexOf(':');
-      const k = ci > -1 ? line.slice(0,ci).trim() : '';
-      const v = ci > -1 ? line.slice(ci+1).trim() : line.trim();
-      if (k.includes('이름')) { ck='name'; secs[ck]=v; }
-      else if (k.includes('난이도')) { ck='diff'; secs[ck]=v; }
-      else if (k.includes('시간')) { ck='time'; secs[ck]=v; }
-      else if (k.includes('인분')) { ck='serv'; secs[ck]=v; }
-      else if (k.includes('재료') && k.length < 10) { ck='ingr'; secs[ck]=v; }
-      else if (k.includes('조리법')||k.includes('만드는')) { ck='steps'; secs[ck]=v; }
-      else if (k.includes('팁')) { ck='tip'; secs[ck]=v; }
-      else if (ck && line.trim()) secs[ck] += '\\n' + line.trim();
-    });
-    if (!secs.name) return '';
-    const ingrChips = (secs.ingr||'').split(/[,\\n]/).map(s=>s.trim()).filter(Boolean).map(s=>'<span>'+s+'</span>').join('');
-    const stepsHtml = (secs.steps||'').split('\\n').map(s=>s.trim()).filter(Boolean).map((s,i)=>'<li><span class="rcstep-n">'+(i+1)+'</span>'+s.replace(/^\\d+[.)\\s]*/,'')+'</li>').join('');
-    const diff = secs.diff||'보통';
-    const diffStar = diff.includes('어려') ? '⭐⭐⭐' : diff.includes('보통') ? '⭐⭐' : '⭐';
-    return '<div class="rcipe-card">' +
-      '<div class="rctit">'+secs.name+
-        '<span class="rctag">'+diff+'</span>'+
-        '<span class="rctag o">'+(secs.time||'—')+'</span></div>' +
-      '<div class="rcchips">' +
-        '<div class="rcchip"><span class="chlbl">난이도</span><span class="chval">'+diffStar+' '+diff+'</span></div>' +
-        '<div class="rcchip"><span class="chlbl">시간</span><span class="chval">'+(secs.time||'—')+'</span></div>' +
-        '<div class="rcchip"><span class="chlbl">인분</span><span class="chval">'+(secs.serv||'2인분')+'</span></div>' +
-      '</div>' +
-      '<div class="rcingr"><div class="ilbl">🛒 재료</div><div class="rcingr-chips">'+ingrChips+'</div></div>' +
-      '<ul class="rcsteps">'+stepsHtml+'</ul>' +
-      (secs.tip ? '<div class="rctip">💡 <strong>팁:</strong> '+secs.tip+'</div>' : '') +
-      '</div>';
+function renderRecipes(data, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = data.map(crop => {
+    const items = crop.recipes.map(r => {
+      const stepsHtml = r.steps.map((s, i) =>
+        '<li class="recipe-item__step"><span class="recipe-item__num">' + (i + 1) + '</span><span>' + s + '</span></li>'
+      ).join('');
+      return '<div class="recipe-item">' +
+        '<div class="recipe-item__hdr">' +
+          '<span class="recipe-item__title">' + r.title + '</span>' +
+          '<a class="recipe-item__yt" href="' + r.ytLink + '" target="_blank">▶ 동영상</a>' +
+        '</div>' +
+        '<div class="recipe-item__ingr"><span class="recipe-item__ingr-lbl">🛒 재료</span>' + r.ingredients + '</div>' +
+        '<ol class="recipe-item__steps">' + stepsHtml + '</ol>' +
+        '</div>';
+    }).join('');
+    return '<div class="recipe-sec">' +
+      '<div class="recipe-sec__hdr">' +
+        '<span class="recipe-sec__emoji">' + crop.emoji + '</span>' +
+        '<span class="recipe-sec__name">' + crop.name + '</span>' +
+      '</div>' + items + '</div>';
   }).join('');
-  const hdr = '<div class="rcipe-hdr"><span class="rhemo">'+(emoji||'🥬')+'</span><div><h3>'+name+' 레시피</h3><p>'+name+'로 만드는 맛있는 요리들</p></div></div>';
-  const result = hdr + (recipesHtml || '<div style="color:#aaa;font-size:12px;padding:8px;">레시피를 불러오지 못했어요.</div>');
-  recipeCache[name] = result;
-  document.getElementById('recipeDetail' + idx).innerHTML = result;
 }
+
+renderRecipes(RECIPE_DATA, 'recipeGrid');
 
 const CROPS = [
   {
     id: 'watermelon', emoji: '🍉', name: '수박', sub: 'Watermelon',
-    ytLink: 'https://www.youtube.com/shorts/qnVyhXTte4g?si=_65NYMplLsmEm4sR',
+    ytLink: 'https://www.youtube.com/shorts/KUeeubKP-uc',
     steps: [
       '수박을 흐르는 물에 깨끗이 씻는다',
       '수박을 반으로 자른다',
@@ -1240,7 +1339,7 @@ const CROPS = [
       '반으로 잘라 흐르는 물에 헹군다',
       '용도에 따라 채썰기, 깍둑썰기, 링 모양으로 썬다'
     ],
-    tip: '눈물을 줄이려면 냉장 보관 후 차갑게 썰거나, 물 속에서 자르세요'
+    tip: '아린 맛을 줄이고 싶다면, 세로로 써세요'
   },
   {
     id: 'radish', emoji: '🫜', name: '무', sub: 'Radish (Daikon)',
@@ -1614,6 +1713,5 @@ async function doRescan(src) {
 </body>
 </html>"""
 
-html = html.replace('__RECIPE_LIST__', recipe_list_html)
 html = html.replace('__GROQ_KEY__', groq_key)
 components.html(html, height=920, scrolling=False)

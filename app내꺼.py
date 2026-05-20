@@ -314,11 +314,10 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .hstat-val{font-size:15px;font-weight:900;color:#222;margin-top:3px;}
 .hai-comment{background:#fffbea;border-left:3px solid #f0c040;border-radius:0 10px 10px 0;padding:10px 12px;font-size:12px;color:#555;line-height:1.65;margin-top:8px;}
 .crop-grid{display:flex;flex-direction:column;gap:12px;}
-.crop-card{background:#fff;border-radius:18px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,0.07);}
-.crop-card__header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
-.crop-card__emoji{font-size:36px;flex-shrink:0;}
-.crop-card__title{font-size:15px;font-weight:900;color:#111;}
-.crop-card__sub{font-size:11px;color:#aaa;font-weight:600;margin-top:2px;}
+.crop-card{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+.crop-card__header{display:flex;align-items:center;gap:10px;padding:14px 16px;}
+.crop-card__emoji{font-size:26px;flex-shrink:0;}
+.crop-card__title{font-size:14px;font-weight:900;color:#111;}
 .crop-card__steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
 .crop-card__step{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#333;line-height:1.55;}
 .crop-card__num{min-width:22px;height:22px;background:#e8f5e9;color:#2d7a3a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px;}
@@ -344,7 +343,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .recipe-sec__body{display:none;}
 .recipe-sec.open .recipe-sec__body{display:block;}
 .crop-card__header{cursor:pointer;}
-.crop-card__body{display:none;padding-top:4px;}
+.crop-card__body{display:none;padding:0 16px 16px;border-top:1px solid #f0f0f0;}
 .crop-card.open .crop-card__body{display:block;}
 .acc-arrow{font-size:22px;font-weight:700;margin-left:auto;flex-shrink:0;transition:transform 0.2s;line-height:1;color:#111;}
 .open .acc-arrow{transform:rotate(90deg);}
@@ -1066,6 +1065,101 @@ async function analyzeCompare() {
 
 const RECIPE_DATA = [
   {
+    emoji: '🍉', name: '수박',
+    recipes: [
+      {
+        title: '수박 화채',
+        ytLink: 'https://youtu.be/wAktJuv7REY?si=O4zOTvsWzrrgFo51',
+        ingredients: '수박(속 부분) 1/4통(800g), 후르츠칵테일 1/2캔(270g), 흰우유 1/5컵(400ml), 사이다 1캔(250ml), 황설탕 4큰술(48g), 얼음 적당량',
+        steps: [
+          '수박은 사방 2cm 주사위 모양으로 썬다 (칼과 도마는 미리 깨끗이 씻어주세요)',
+          '후르츠칵테일은 원액과 함께 준비한다',
+          '넓은 볼에 흰 우유, 사이다, 황설탕을 넣고 섞는다',
+          '썰어 둔 수박과 후르츠칵테일을 우유에 넣고 섞는다',
+          '얼음을 띄워 완성한다'
+        ]
+      },
+      {
+        title: '수박 오이 냉국',
+        ytLink: 'https://youtu.be/qI1LRerUWXQ?si=fJoyUukgCfgQNbS',
+        ingredients: '수박(속 부분) 1/8통(400g), 오이 약 1/2개(100g), 정수 물 2와1/2컵(450ml), 황설탕 4와1/2큰술(54g), 환만식초 4와1/2큰술(36g), 진간장 1과1/2큰술(15g), 꽃소금 약간, 얼음 적당량',
+        steps: [
+          '수박은 사방 2cm 깍둑 썰기 한다',
+          '오이는 반 갈라 얇게 편 썬다',
+          '넓은 볼에 물, 황설탕, 진간장, 환만식초, 꽃소금을 넣고 섞어 냉국 육수를 만든다',
+          '썰어놓은 수박과 오이를 육수에 넣고 섞는다',
+          '얼음을 띄워 완성한다'
+        ]
+      }
+    ]
+  },
+  {
+    emoji: '🍎', name: '사과',
+    recipes: [
+      {
+        title: '사과 파이',
+        ytLink: 'https://youtu.be/jVH2k4yNi4o?si=u7ur2inGZ1ye-bSK',
+        ingredients: '사과조림 1컵(180g), 중력분 1과1/2컵(150g), 황설탕 1/2컵(80g), 달걀 1개(60g), 우유 1/3컵(65g), 꽃소금 1/2큰술(2g), 베이킹파우더 1큰술(8g), 스틱버터 1/2개(40g), 스틱버터(코팅용) 적당량',
+        steps: [
+          '버터를 전자레인지에 1분 돌려 녹인 후 식힌다',
+          '큰 볼에 달걀, 황설탕을 설탕이 녹을 때까지 거품기로 섞는다',
+          '우유를 넣고 섞은 후 꽃소금, 버터를 조금씩 넣어가며 섞는다',
+          '중력분, 베이킹파우더를 넣고 뭉치지 않도록 섞는다',
+          '사과조림을 넣고 섞어준다',
+          '오븐 용기 안쪽에 버터를 얇게 바른다',
+          '반죽을 용기에 넣고 바닥을 쳐 공기를 제거한다',
+          '에어프라이어 150도에서 10분 예열 후 30분 굽는다',
+          '파이가 구워지면 용기에서 분리해 먹기 좋은 크기로 자른다',
+          '바닐라 아이스크림, 시나몬 가루를 곁들여 완성한다'
+        ]
+      },
+      {
+        title: '사과 고르곤졸라',
+        ytLink: 'https://youtu.be/jVH2k4yNi4o?si=u7ur2inGZ1ye-bSK',
+        ingredients: '또띠아(20cm) 1장(45g), 사과조림 1컵(180g), 모짜렐라치즈 1컵(110g), 물 2큰술(10g), 고르곤졸라치즈 적당량, 파슬리 가루 적당량',
+        steps: [
+          '프라이팬을 약불에서 예열한다',
+          '또띠아에 사과조림을 넓게 펼친다',
+          '모짜렐라치즈를 사과조림 위에 골고루 뿌린다',
+          '고르곤졸라 치즈를 잘게 잘라 모짜렐라 위에 올린다',
+          '예열된 프라이팬에 물 2큰술을 넣는다',
+          '토핑한 피자를 프라이팬에 넣는다',
+          '가장 약불에서 뚜껑을 덮고 치즈가 녹을 때까지 굽는다',
+          '완성 접시에 꺼내 파슬리가루를 뿌려 완성한다'
+        ]
+      }
+    ]
+  },
+  {
+    emoji: '🍓', name: '딸기',
+    recipes: [
+      {
+        title: '딸기잼',
+        ytLink: 'https://youtu.be/fUAl5Z2zjvE?si=LZBYK9zyAIWUrFCo',
+        ingredients: '딸기 1kg, 황설탕 2컵(320g), 소금 1/2스푼',
+        steps: [
+          '딸기를 얇게 슬라이스하고 누름도구로 으깨준다',
+          '황설탕 2컵과 소금 1/2스푼을 넣고 저어준다',
+          '30분동안 끓여준다 (색이 예쁘려면 거품을 걷어낸다)'
+        ]
+      },
+      {
+        title: '딸기 티라미수',
+        ytLink: 'https://youtu.be/WtCaqeozjH4?si=Z-TaR7hl6zZU7uMF',
+        ingredients: '생크림 75g, 크림치즈 150g, 연유 두큰술, 황설탕 50g, 레몬즙 5큰술, 딸기 500g, 애플민트',
+        steps: [
+          '딸기를 다양한 모양으로 썰어준다',
+          '자른 딸기에 설탕, 레몬즙을 넣어 한 시간 절여준다',
+          '생크림, 설탕을 핸드믹서로 잘 섞어준다',
+          '크림치즈, 연유를 넣어 섞어준다',
+          '준비한 용기에 절인 딸기를 넣고 크림을 올린다',
+          '다시 한 번 반복해 넣어준다',
+          '애플민트를 올려 완성한다'
+        ]
+      }
+    ]
+  },
+  {
     emoji: '🥬', name: '배추',
     recipes: [
       {
@@ -1168,101 +1262,6 @@ const RECIPE_DATA = [
           '물, 간마늘, 국간장, 멸치액젓을 넣고 중불에서 20분 끓인다',
           '소고기가 부드러워지면 양파를 넣어 끓인다',
           '소금으로 간을 맞추고 대파, 후추를 넣어 마무리한다'
-        ]
-      }
-    ]
-  },
-  {
-    emoji: '🍉', name: '수박',
-    recipes: [
-      {
-        title: '수박 화채',
-        ytLink: 'https://youtu.be/wAktJuv7REY?si=O4zOTvsWzrrgFo51',
-        ingredients: '수박(속 부분) 1/4통(800g), 후르츠칵테일 1/2캔(270g), 흰우유 1/5컵(400ml), 사이다 1캔(250ml), 황설탕 4큰술(48g), 얼음 적당량',
-        steps: [
-          '수박은 사방 2cm 주사위 모양으로 썬다 (칼과 도마는 미리 깨끗이 씻어주세요)',
-          '후르츠칵테일은 원액과 함께 준비한다',
-          '넓은 볼에 흰 우유, 사이다, 황설탕을 넣고 섞는다',
-          '썰어 둔 수박과 후르츠칵테일을 우유에 넣고 섞는다',
-          '얼음을 띄워 완성한다'
-        ]
-      },
-      {
-        title: '수박 오이 냉국',
-        ytLink: 'https://youtu.be/qI1LRerUWXQ?si=fJoyUukgCfgQNbS',
-        ingredients: '수박(속 부분) 1/8통(400g), 오이 약 1/2개(100g), 정수 물 2와1/2컵(450ml), 황설탕 4와1/2큰술(54g), 환만식초 4와1/2큰술(36g), 진간장 1과1/2큰술(15g), 꽃소금 약간, 얼음 적당량',
-        steps: [
-          '수박은 사방 2cm 깍둑 썰기 한다',
-          '오이는 반 갈라 얇게 편 썬다',
-          '넓은 볼에 물, 황설탕, 진간장, 환만식초, 꽃소금을 넣고 섞어 냉국 육수를 만든다',
-          '썰어놓은 수박과 오이를 육수에 넣고 섞는다',
-          '얼음을 띄워 완성한다'
-        ]
-      }
-    ]
-  },
-  {
-    emoji: '🍎', name: '사과',
-    recipes: [
-      {
-        title: '사과 파이',
-        ytLink: 'https://youtu.be/jVH2k4yNi4o?si=u7ur2inGZ1ye-bSK',
-        ingredients: '사과조림 1컵(180g), 중력분 1과1/2컵(150g), 황설탕 1/2컵(80g), 달걀 1개(60g), 우유 1/3컵(65g), 꽃소금 1/2큰술(2g), 베이킹파우더 1큰술(8g), 스틱버터 1/2개(40g), 스틱버터(코팅용) 적당량',
-        steps: [
-          '버터를 전자레인지에 1분 돌려 녹인 후 식힌다',
-          '큰 볼에 달걀, 황설탕을 설탕이 녹을 때까지 거품기로 섞는다',
-          '우유를 넣고 섞은 후 꽃소금, 버터를 조금씩 넣어가며 섞는다',
-          '중력분, 베이킹파우더를 넣고 뭉치지 않도록 섞는다',
-          '사과조림을 넣고 섞어준다',
-          '오븐 용기 안쪽에 버터를 얇게 바른다',
-          '반죽을 용기에 넣고 바닥을 쳐 공기를 제거한다',
-          '에어프라이어 150도에서 10분 예열 후 30분 굽는다',
-          '파이가 구워지면 용기에서 분리해 먹기 좋은 크기로 자른다',
-          '바닐라 아이스크림, 시나몬 가루를 곁들여 완성한다'
-        ]
-      },
-      {
-        title: '사과 고르곤졸라',
-        ytLink: 'https://youtu.be/jVH2k4yNi4o?si=u7ur2inGZ1ye-bSK',
-        ingredients: '또띠아(20cm) 1장(45g), 사과조림 1컵(180g), 모짜렐라치즈 1컵(110g), 물 2큰술(10g), 고르곤졸라치즈 적당량, 파슬리 가루 적당량',
-        steps: [
-          '프라이팬을 약불에서 예열한다',
-          '또띠아에 사과조림을 넓게 펼친다',
-          '모짜렐라치즈를 사과조림 위에 골고루 뿌린다',
-          '고르곤졸라 치즈를 잘게 잘라 모짜렐라 위에 올린다',
-          '예열된 프라이팬에 물 2큰술을 넣는다',
-          '토핑한 피자를 프라이팬에 넣는다',
-          '가장 약불에서 뚜껑을 덮고 치즈가 녹을 때까지 굽는다',
-          '완성 접시에 꺼내 파슬리가루를 뿌려 완성한다'
-        ]
-      }
-    ]
-  },
-  {
-    emoji: '🍓', name: '딸기',
-    recipes: [
-      {
-        title: '딸기잼',
-        ytLink: 'https://youtu.be/fUAl5Z2zjvE?si=LZBYK9zyAIWUrFCo',
-        ingredients: '딸기 1kg, 황설탕 2컵(320g), 소금 1/2스푼',
-        steps: [
-          '딸기를 얇게 슬라이스하고 누름도구로 으깨준다',
-          '황설탕 2컵과 소금 1/2스푼을 넣고 저어준다',
-          '30분동안 끓여준다 (색이 예쁘려면 거품을 걷어낸다)'
-        ]
-      },
-      {
-        title: '딸기 티라미수',
-        ytLink: 'https://youtu.be/WtCaqeozjH4?si=Z-TaR7hl6zZU7uMF',
-        ingredients: '생크림 75g, 크림치즈 150g, 연유 두큰술, 황설탕 50g, 레몬즙 5큰술, 딸기 500g, 애플민트',
-        steps: [
-          '딸기를 다양한 모양으로 썰어준다',
-          '자른 딸기에 설탕, 레몬즙을 넣어 한 시간 절여준다',
-          '생크림, 설탕을 핸드믹서로 잘 섞어준다',
-          '크림치즈, 연유를 넣어 섞어준다',
-          '준비한 용기에 절인 딸기를 넣고 크림을 올린다',
-          '다시 한 번 반복해 넣어준다',
-          '애플민트를 올려 완성한다'
         ]
       }
     ]
@@ -1387,7 +1386,7 @@ function renderCrops(crops, containerId) {
     return '<div class="crop-card crop-card--' + crop.id + '" id="' + cardId + '">' +
       '<div class="crop-card__header" onclick="toggleAccordion(this)">' +
       '<span class="crop-card__emoji">' + crop.emoji + '</span>' +
-      '<div><p class="crop-card__title">' + crop.name + '</p><p class="crop-card__sub">' + crop.sub + '</p></div>' +
+      '<span class="crop-card__title">' + crop.name + '</span>' +
       '<span class="acc-arrow">›</span>' +
       '</div>' +
       '<div class="crop-card__body">' +

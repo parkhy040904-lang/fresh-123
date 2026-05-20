@@ -1177,7 +1177,79 @@ async function loadRecipeForProduce(name, idx, emoji) {
   document.getElementById('recipeDetail' + idx).innerHTML = result;
 }
 
+const STATIC_PREP_DATA = {
+  '수박': {
+    steps: [
+      '수박 겉면을 흐르는 물에 솔로 깨끗이 씻는다',
+      '도마 위에 세워놓고 반으로 자른다',
+      '반쪽을 다시 반으로 잘라 4등분한다',
+      '껍질과 과육 사이를 칼로 분리하거나, 과육만 깍둑썰기한다',
+      '씨를 포크나 손으로 제거한다'
+    ],
+    tip: '자르기 전 냉장 보관하면 더 시원하게 즐길 수 있어요'
+  },
+  '사과': {
+    steps: [
+      '흐르는 물에 껍질을 손으로 문질러 깨끗이 씻는다',
+      '꼭지 부분을 제거한다',
+      '4등분하여 씨방과 씨를 V자로 도려낸다',
+      '껍질을 벗기거나 그대로 용도에 맞게 썬다'
+    ],
+    tip: '갈변 방지를 위해 자른 후 소금물이나 레몬물에 잠깐 담가두세요'
+  },
+  '딸기': {
+    steps: [
+      '꼭지를 떼지 말고 물에 1~2분 담가 농약을 불린다',
+      '흐르는 물에 가볍게 헹군다 (세게 문지르지 않는다)',
+      '물기를 키친타월로 조심스럽게 제거한다',
+      '꼭지를 손으로 비틀거나 칼로 잘라 제거한다'
+    ],
+    tip: '씻기 전 꼭지를 제거하면 물이 들어가 맛이 떨어지므로 반드시 나중에 제거하세요'
+  },
+  '배추': {
+    steps: [
+      '겉잎을 2~3장 떼어낸다 (손상되거나 오염된 잎 제거)',
+      '밑동을 칼로 평평하게 잘라낸다',
+      '밑동에 칼집을 넣고 손으로 찢어 반으로 가른다 (아삭함 유지)',
+      '잎을 한 장씩 분리해 흐르는 물에 씻는다',
+      '용도에 맞게 먹기 좋은 크기로 썬다'
+    ],
+    tip: '김치용이라면 소금에 절이기 전, 요리용이라면 씻은 후 바로 사용하세요'
+  },
+  '양파': {
+    steps: [
+      '겉의 마른 껍질을 손으로 벗겨낸다',
+      '위 꼭지 부분과 뿌리 부분을 칼로 잘라낸다',
+      '반으로 잘라 흐르는 물에 헹군다',
+      '용도에 따라 채썰기, 깍둑썰기, 링 모양으로 썬다'
+    ],
+    tip: '눈물을 줄이려면 냉장 보관 후 차갑게 썰거나, 물 속에서 자르세요'
+  },
+  '무': {
+    steps: [
+      '무 표면을 수세미나 솔로 문질러 흐르는 물에 씻는다',
+      '윗부분 잎 달린 꼭지와 뿌리 끝을 잘라낸다',
+      '필러로 껍질을 얇게 벗긴다 (조림용은 껍질째 가능)',
+      '용도에 따라 깍둑썰기, 반달썰기, 채썰기로 자른다'
+    ],
+    tip: '무 윗부분은 달고 아래로 갈수록 매운 맛이 강해요. 용도에 맞게 부위를 선택하세요'
+  }
+};
+
 async function loadPrepForProduce(name, idx, emoji) {
+  if (STATIC_PREP_DATA[name]) {
+    const data = STATIC_PREP_DATA[name];
+    const stepsHtml = data.steps.map((s,i) =>
+      '<li><span class="pstep-n">'+(i+1)+'</span>'+s+'</li>'
+    ).join('');
+    const hdr = '<div class="rcipe-hdr"><span class="rhemo">'+(emoji||'🥬')+'</span><div><h3>'+name+' 손질법</h3><p>올바른 손질 방법 가이드</p></div></div>';
+    const section = '<div class="psection"><div class="pstitle">🔪 손질 방법</div><ol class="pstep-list">'+stepsHtml+'</ol></div>';
+    const tip = data.tip ? '<div class="rctip">💡 <strong>팁:</strong> '+data.tip+'</div>' : '';
+    const result = hdr + section + tip;
+    prepCache[name] = result;
+    document.getElementById('prepDetail'+idx).innerHTML = result;
+    return;
+  }
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},

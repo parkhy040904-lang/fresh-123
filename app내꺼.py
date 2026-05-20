@@ -324,7 +324,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .crop-card__step-text{flex:1;padding-top:3px;}
 .crop-card__tip{background:#fffbea;border-left:3px solid #f0c040;border-radius:0 8px 8px 0;padding:8px 12px;font-size:11px;color:#555;line-height:1.6;}
 .crop-card__yt{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:10px 14px;background:#2d7a3a;border-radius:12px;color:#fff;font-size:12px;font-weight:800;text-decoration:none;}
-.recipe-grid{display:flex;flex-direction:column;gap:14px;}
+.recipe-grid{display:flex;flex-direction:column;gap:12px;}
 .recipe-sec{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.07);}
 .recipe-sec__hdr{background:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;}
 .recipe-sec__emoji{font-size:28px;}

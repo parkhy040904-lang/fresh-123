@@ -343,7 +343,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .recipe-sec__body{display:none;}
 .recipe-sec.open .recipe-sec__body{display:block;}
 .crop-card__header{cursor:pointer;}
-.crop-card__body{display:none;padding:0 16px 16px;border-top:1px solid #f0f0f0;}
+.crop-card__body{display:none;padding:12px 16px 16px;border-top:1px solid #f0f0f0;}
 .crop-card.open .crop-card__body{display:block;}
 .acc-arrow{font-size:22px;font-weight:700;margin-left:auto;flex-shrink:0;transition:transform 0.2s;line-height:1;color:#111;}
 .open .acc-arrow{transform:rotate(90deg);}

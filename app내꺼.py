@@ -792,6 +792,8 @@ function showResult(produce, score, colorScore, surfaceScore, shapeScore, anomal
 async function analyze(src) {
   const imgEl = document.getElementById(src === 'cam' ? 'camImg' : 'uploadImg');
   if (!imgEl.src || imgEl.src === '') { alert('이미지가 없어요!'); return; }
+  if (src === 'cam') document.getElementById('uploadResult').style.display = 'none';
+  else document.getElementById('camResult').style.display = 'none';
   const run = async () => {
     showLoading();
     try {

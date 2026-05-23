@@ -153,9 +153,10 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
 .tip{background:#f5fbf5;border-radius:12px;padding:10px 12px;
   font-size:12px;color:#444;font-weight:600;line-height:1.65;}
 
-.score-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:10px 0 6px;}
+.score-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin:10px 0 6px;}
 .score-item{background:#f7f7f7;border-radius:12px;padding:9px 6px;text-align:center;}
 .score-label{font-size:9px;color:#aaa;font-weight:700;letter-spacing:0.02em;}
+.score-weight{font-size:8px;color:#bbb;font-weight:600;}
 .score-val{font-size:20px;font-weight:900;margin-top:2px;}
 .btn-row{display:none;gap:8px;margin-top:10px;}
 .recipe-btn{flex:1;padding:11px;
@@ -742,7 +743,7 @@ function showLoading() {
   rbox.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-function showResult(produce, score, colorScore, textureScore, status, desc, storage, shelf) {
+function showResult(produce, score, colorScore, surfaceScore, shapeScore, anomalyScore, status, desc, storage, shelf) {
   const scorePct = Math.min(parseFloat(score) * 10, 100);
   let tagCls, emoji, color, statusLabel;
   const s = parseFloat(score);
@@ -765,9 +766,10 @@ function showResult(produce, score, colorScore, textureScore, status, desc, stor
   bar.style.background = 'linear-gradient(90deg,' + color + '88,' + color + ')';
   setTimeout(() => { bar.style.width = scorePct + '%'; }, 50);
   document.getElementById('scoreGrid').innerHTML =
-    '<div class="score-item"><div class="score-label">🎨 색상</div><div class="score-val" style="color:' + scoreColor(colorScore) + '">' + colorScore + '</div></div>' +
-    '<div class="score-item"><div class="score-label">👁 외관</div><div class="score-val" style="color:' + scoreColor(textureScore) + '">' + textureScore + '</div></div>' +
-    '<div class="score-item"><div class="score-label">⭐ 종합</div><div class="score-val" style="color:' + color + '">' + score + '</div></div>';
+    '<div class="score-item"><div class="score-label">🎨 색상 <span class="score-weight">35%</span></div><div class="score-val" style="color:' + scoreColor(colorScore) + '">' + colorScore + '</div></div>' +
+    '<div class="score-item"><div class="score-label">🔍 표면 <span class="score-weight">30%</span></div><div class="score-val" style="color:' + scoreColor(surfaceScore) + '">' + surfaceScore + '</div></div>' +
+    '<div class="score-item"><div class="score-label">📐 형태 <span class="score-weight">25%</span></div><div class="score-val" style="color:' + scoreColor(shapeScore) + '">' + shapeScore + '</div></div>' +
+    '<div class="score-item"><div class="score-label">⚠️ 이상 <span class="score-weight">10%</span></div><div class="score-val" style="color:' + scoreColor(anomalyScore) + '">' + anomalyScore + '</div></div>';
   document.getElementById('rtags').innerHTML =
     '<span class="tag ' + tagCls + '">' + statusLabel + '</span>' +
     '<span class="tag" style="background:#f3f3f3;color:#666">AI 분석</span>' +
@@ -778,7 +780,7 @@ function showResult(produce, score, colorScore, textureScore, status, desc, stor
     '⏰ <b>남은 기한:</b> ' + (shelf || '—');
   document.getElementById('btnRow').style.display = 'flex';
   shownRecipes = [];
-  lastResult = {produce, score, colorScore, textureScore, desc};
+  lastResult = {produce, score, colorScore, surfaceScore, shapeScore, anomalyScore, desc};
   compareCachedHTML = null;
   if (compareStream) stopCompareCam(null);
   document.getElementById('cbox').style.display = 'none';
@@ -844,7 +846,7 @@ async function analyze(src) {
             role: 'user',
             content: [
               {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + base64}},
-              {type: 'text', text: '[필수 관찰 항목]\\n① 검은 반점·갈색 부패 부위가 있는가?\\n② 곰팡이(흰색/회색/검은색 가루·솜털)가 있는가?\\n③ 껍질이 주름지거나 물러진 부위가 있는가?\\n④ 표면이 균열되거나 즙이 새는가?\\n\\n[채점 규칙 - 절대 준수]\\n• ①~④ 중 하나라도 해당하면 → 종합 점수 4점 이하\\n• 검은 반점이나 곰팡이가 명확히 보이면 → 종합 점수 2점 이하\\n• 곰팡이가 광범위하거나 악취 등 심각한 부패면 → 종합 점수 1점 이하\\n• 사진에 신선한 것과 상한 것이 섞여 있으면 → 가장 상한 것 기준으로 채점\\n• 전체가 완벽히 신선할 때만 8점 이상 가능\\n\\n[점수 기준]\\n8~10: 흠집 전혀 없이 완벽히 신선, 바로 섭취 가능\\n6~7: 아주 작은 흠집, 2~3일 내 섭취 권장\\n4~5: 변색·이상 있으나 오늘~내일 섭취 가능\\n2~3: 부패 일부, 섭취 위험\\n0~1: 곰팡이·광범위 부패, 즉시 폐기\\n\\n[중요] 모든 점수는 반드시 소수점 첫째 자리까지 작성 (예: 8.0 금지, 7.5 또는 8.3처럼)\\n\\n[출력 형식 - 이것만 출력, 다른 말 금지]\\n농산물 종류: (이름)\\n색상 점수: (0.0~10.0, 소수점 필수)\\n외관 점수: (0.0~10.0, 소수점 필수)\\n종합 신선도 점수: (0.0~10.0, 소수점 필수)\\n상태: (신선/보통/주의/부패 중 하나)\\n상태 설명: (관찰한 특징 포함해서 두 문장)\\n보관 방법: (구체적 온도·방법)\\n예상 남은 기한: (기간)'}
+              {type: 'text', text: '[4가지 항목을 각각 채점하세요]\\n① 색상 상태 (35%): 색깔이 신선한가? 변색·탈색·얼룩이 있는가?\\n② 표면 상태 (30%): 상처·주름·곰팡이·검은 반점이 있는가?\\n③ 형태 유지 (25%): 처짐·무름·형태 붕괴가 있는가?\\n④ 이상 징후 (10%): 악취 흔적·즙 흘림·특수 부패 신호가 있는가?\\n\\n[채점 규칙 - 절대 준수]\\n• 곰팡이·악취가 보이면 → 해당 항목 2점 이하\\n• 광범위한 부패·검은 반점이 보이면 → 해당 항목 3점 이하\\n• 전체가 완벽히 신선할 때만 각 항목 8점 이상 가능\\n• 사진에 신선한 것과 상한 것이 섞이면 → 가장 상한 것 기준\\n\\n[점수 기준]\\n8~10: 흠집 없이 완벽히 신선\\n6~7: 아주 작은 이상, 양호\\n4~5: 변색·이상 있음, 주의\\n2~3: 부패 부위 있음, 위험\\n0~1: 심각한 부패, 즉시 폐기\\n\\n[중요] 모든 점수는 반드시 소수점 첫째 자리까지 (예: 7.5, 8.3)\\n\\n[출력 형식 - 이것만 출력, 다른 말 금지]\\n농산물 종류: (이름)\\n색상 상태: (0.0~10.0)\\n표면 상태: (0.0~10.0)\\n형태 유지: (0.0~10.0)\\n이상 징후: (0.0~10.0)\\n상태: (신선/보통/주의/부패 중 하나)\\n상태 설명: (관찰한 특징 포함해서 두 문장)\\n보관 방법: (구체적 온도·방법)\\n예상 남은 기한: (기간)'}
             ]
           }]
         })
@@ -857,9 +859,10 @@ async function analyze(src) {
         .trim();
       const sectionKeys = [
         {key:'농산물 종류', kws:['농산물','종류','채소','작물','식품']},
-        {key:'색상 점수',   kws:['색상']},
-        {key:'외관 점수',   kws:['외관','질감']},
-        {key:'종합 신선도 점수', kws:['종합','신선도 점수']},
+        {key:'색상 상태',   kws:['색상 상태','색상']},
+        {key:'표면 상태',   kws:['표면 상태','표면','외관','질감']},
+        {key:'형태 유지',   kws:['형태 유지','형태']},
+        {key:'이상 징후',   kws:['이상 징후','이상','징후']},
         {key:'상태 설명',   kws:['상태 설명','설명']},
         {key:'상태',        kws:['상태']},
         {key:'보관 방법',   kws:['보관','저장']},
@@ -876,15 +879,14 @@ async function analyze(src) {
       }
       const parseScore = r => { const m = (r||'').match(/([\\d.]+)/); return m ? parseFloat(m[1]).toFixed(1) : '5.0'; };
       const produce      = sections['농산물 종류'] || '농산물';
-      const colorScore   = parseScore(sections['색상 점수']);
-      const textureScore = parseScore(sections['외관 점수']);
       const status       = sections['상태'] || '보통';
       const desc         = sections['상태 설명'] || '';
       const storage      = sections['보관 방법'] || '';
       const shelf        = sections['예상 남은 기한'] || '';
-      let s  = parseFloat(parseScore(sections['종합 신선도 점수']));
-      let cs = parseFloat(colorScore);
-      let ts = parseFloat(textureScore);
+      let cs = parseFloat(parseScore(sections['색상 상태']));
+      let ss = parseFloat(parseScore(sections['표면 상태']));
+      let fs = parseFloat(parseScore(sections['형태 유지']));
+      let as = parseFloat(parseScore(sections['이상 징후']));
       const combined = desc + ' ' + status;
       const negWords  = ['없','않','전혀','아닌','안 '];
       const sentences = combined.split(/[.!?\\n。]/);
@@ -895,27 +897,24 @@ async function analyze(src) {
       const rotWords  = ['부패','썩','검은 반점','검은반점','흑변'];
       const warnWords = ['물러','주름','변색','균열','상함','상해'];
       if (hasBad(moldWords)) {
-        s  = Math.min(s,  1.9);
-        cs = Math.min(cs, 2.0);
-        ts = Math.min(ts, 2.0);
+        cs = Math.min(cs, 2.0); ss = Math.min(ss, 2.0);
+        fs = Math.min(fs, 2.0); as = Math.min(as, 2.0);
       } else if (hasBad(rotWords) || status === '부패') {
-        s  = Math.min(s,  2.9);
-        cs = Math.min(cs, 3.0);
-        ts = Math.min(ts, 3.0);
+        cs = Math.min(cs, 3.0); ss = Math.min(ss, 3.0);
+        fs = Math.min(fs, 3.0); as = Math.min(as, 3.0);
       } else if (status === '주의' || hasBad(warnWords)) {
-        s  = Math.min(s,  4.9);
-        cs = Math.min(cs, 5.0);
-        ts = Math.min(ts, 5.0);
+        cs = Math.min(cs, 5.0); ss = Math.min(ss, 5.0);
+        fs = Math.min(fs, 5.0); as = Math.min(as, 5.0);
       }
+      // 가중치 적용: 색상 35% + 표면 30% + 형태 25% + 이상 10%
+      let s = cs * 0.35 + ss * 0.30 + fs * 0.25 + as * 0.10;
       const score = s.toFixed(1);
-      const colorScoreFinal   = cs.toFixed(1);
-      const textureScoreFinal = ts.toFixed(1);
       let shelfFinal;
       if (s < 2) shelfFinal = '즉시 버리세요 (섭취 불가)';
       else if (s < 4) shelfFinal = '오늘 안에 폐기하거나 상한 부분 완전히 제거 후 확인';
       else if (s < 6) shelfFinal = shelf || '오늘~내일 사용 권장';
       else shelfFinal = shelf;
-      showResult(produce, score, colorScoreFinal, textureScoreFinal, status, desc, storage, shelfFinal);
+      showResult(produce, score, cs.toFixed(1), ss.toFixed(1), fs.toFixed(1), as.toFixed(1), status, desc, storage, shelfFinal);
       autoSaveEntry(src);
     } catch(err) {
       document.getElementById('remo').textContent = '❌';
@@ -1774,4 +1773,4 @@ async function doRescan(src) {
 </html>"""
 
 html = html.replace('__GROQ_KEY__', groq_key)
-components.html(html, height=920, scrolling=False)
+components.html(html, height=920, scrolling=False)v

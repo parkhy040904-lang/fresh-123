@@ -886,7 +886,7 @@ async function analyze(src) {
       let cs = parseFloat(parseScore(sections['색상 상태']));
       let ss = parseFloat(parseScore(sections['표면 상태']));
       let fs = parseFloat(parseScore(sections['형태 유지']));
-      let as = parseFloat(parseScore(sections['이상 징후']));
+      let anomS = parseFloat(parseScore(sections['이상 징후']));
       const combined = desc + ' ' + status;
       const negWords  = ['없','않','전혀','아닌','안 '];
       const sentences = combined.split(/[.!?\\n。]/);
@@ -898,23 +898,23 @@ async function analyze(src) {
       const warnWords = ['물러','주름','변색','균열','상함','상해'];
       if (hasBad(moldWords)) {
         cs = Math.min(cs, 2.0); ss = Math.min(ss, 2.0);
-        fs = Math.min(fs, 2.0); as = Math.min(as, 2.0);
+        fs = Math.min(fs, 2.0); anomS = Math.min(anomS, 2.0);
       } else if (hasBad(rotWords) || status === '부패') {
         cs = Math.min(cs, 3.0); ss = Math.min(ss, 3.0);
-        fs = Math.min(fs, 3.0); as = Math.min(as, 3.0);
+        fs = Math.min(fs, 3.0); anomS = Math.min(anomS, 3.0);
       } else if (status === '주의' || hasBad(warnWords)) {
         cs = Math.min(cs, 5.0); ss = Math.min(ss, 5.0);
-        fs = Math.min(fs, 5.0); as = Math.min(as, 5.0);
+        fs = Math.min(fs, 5.0); anomS = Math.min(anomS, 5.0);
       }
       // 가중치 적용: 색상 35% + 표면 30% + 형태 25% + 이상 10%
-      let s = cs * 0.35 + ss * 0.30 + fs * 0.25 + as * 0.10;
+      let s = cs * 0.35 + ss * 0.30 + fs * 0.25 + anomS * 0.10;
       const score = s.toFixed(1);
       let shelfFinal;
       if (s < 2) shelfFinal = '즉시 버리세요 (섭취 불가)';
       else if (s < 4) shelfFinal = '오늘 안에 폐기하거나 상한 부분 완전히 제거 후 확인';
       else if (s < 6) shelfFinal = shelf || '오늘~내일 사용 권장';
       else shelfFinal = shelf;
-      showResult(produce, score, cs.toFixed(1), ss.toFixed(1), fs.toFixed(1), as.toFixed(1), status, desc, storage, shelfFinal);
+      showResult(produce, score, cs.toFixed(1), ss.toFixed(1), fs.toFixed(1), anomS.toFixed(1), status, desc, storage, shelfFinal);
       autoSaveEntry(src);
     } catch(err) {
       document.getElementById('remo').textContent = '❌';
@@ -1773,4 +1773,4 @@ async function doRescan(src) {
 </html>"""
 
 html = html.replace('__GROQ_KEY__', groq_key)
-components.html(html, height=920, scrolling=False)v
+components.html(html, height=920, scrolling=False)

@@ -577,7 +577,6 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
       <button class="hist-tabbtn active" id="htab0" onclick="switchHistTab(0)">📋 전체 기록</button>
       <button class="hist-tabbtn" id="htab1" onclick="switchHistTab(1)">⭐ 찜한 항목</button>
       <button class="hist-tabbtn" id="htab2" onclick="switchHistTab(2)">📊 비교 분석</button>
-      <button onclick="deleteAllHist()" style="border:none;background:#f0f0f0;color:#bbb;font-size:10px;font-weight:800;padding:0 10px;cursor:pointer;font-family:'Nunito',sans-serif;border-left:1px solid #ebebeb;flex-shrink:0;white-space:nowrap;">🗑️ 전체삭제</button>
     </div>
     <div class="scroll" id="histContent" style="padding:12px 14px 24px;"></div>
   </div>
@@ -1601,7 +1600,7 @@ function renderAllRecords(content, hist, isStarred) {
       '<button onclick="deleteHist('+h.id+')" style="background:none;border:none;color:#ccc;font-size:20px;cursor:pointer;flex-shrink:0;padding:2px 1px;line-height:1;">×</button>' +
     '</div>';
   }).join('');
-  content.innerHTML = '<div class="hsec-hdr"><span class="hsec-t">전체 분석 기록</span><span class="hsec-cnt">총 '+hist.length+'건</span></div>' + items;
+  content.innerHTML = '<div class="hsec-hdr"><span class="hsec-t">전체 분석 기록</span><span style="display:flex;align-items:center;gap:7px;"><span class="hsec-cnt">총 '+hist.length+'건</span><button onclick="deleteAllHist()" style="background:#f0f0f0;border:none;border-radius:7px;padding:4px 9px;font-size:10px;font-weight:800;color:#bbb;cursor:pointer;font-family:\'Nunito\',sans-serif;line-height:1.3;">🗑️ 전체삭제</button></span></div>' + items;
 }
 
 function toggleItemStar(id, el) {

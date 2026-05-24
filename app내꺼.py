@@ -1027,7 +1027,7 @@ async function analyzeCompare() {
           role: 'user',
           content: [
             {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + base64}},
-            {type: 'text', text: '사진 속 농산물의 신선도를 아래 규칙에 따라 엄격하게 채점하세요.\\n\\n[필수 관찰 항목]\\n① 검은 반점·갈색 부패 부위가 있는가?\\n② 곰팡이(흰색/회색/검은색 가루·솜털)가 있는가?\\n③ 껍질이 주름지거나 물러진 부위가 있는가?\\n④ 표면이 균열되거나 즙이 새는가?\\n\\n[채점 규칙 - 절대 준수]\\n• ①~④ 중 하나라도 해당하면 → 종합 점수 4점 이하\\n• 검은 반점이나 곰팡이가 명확히 보이면 → 종합 점수 2점 이하\\n• 곰팡이가 광범위하거나 악취 등 심각한 부패면 → 종합 점수 1점 이하\\n• 사진에 신선한 것과 상한 것이 섞여 있으면 → 가장 상한 것 기준으로 채점\\n• 전체가 완벽히 신선할 때만 8점 이상 가능\\n\\n[점수 기준]\\n8~10: 완벽히 신선\\n6~7: 아주 작은 흠집\\n4~5: 변색·이상 있음\\n2~3: 부패 일부\\n0~1: 곰팡이·광범위 부패\\n\\n[중요] 점수는 반드시 소수점 첫째 자리까지 작성 (예: 7.5, 8.3)\\n\\n[출력 형식 - 이것만 출력]\\n농산물 종류: (이름)\\n종합 신선도 점수: (0.0~10.0, 소수점 필수)\\n상태 설명: (부패·이상 여부 포함 한 문장)'}
+            {type: 'text', text: '[4가지 항목을 각각 채점하세요]\\n① 색상 상태 (35%): 색깔이 신선한가? 변색·탈색·얼룩이 있는가?\\n② 표면 상태 (30%): 상처·주름·곰팡이·검은 반점이 있는가?\\n③ 형태 유지 (25%): 처짐·무름·형태 붕괴가 있는가?\\n④ 이상 징후 (10%): 악취 흔적·즙 흘림·특수 부패 신호가 있는가?\\n\\n[채점 규칙 - 절대 준수]\\n• 곰팡이·악취가 보이면 → 해당 항목 2점 이하\\n• 광범위한 부패·검은 반점이 보이면 → 해당 항목 3점 이하\\n• 전체가 완벽히 신선할 때만 각 항목 8점 이상 가능\\n• 사진에 신선한 것과 상한 것이 섞이면 → 가장 상한 것 기준\\n\\n[중요] 모든 점수는 반드시 소수점 첫째 자리까지 (예: 7.5, 8.3)\\n\\n[출력 형식 - 이것만 출력, 다른 말 금지]\\n농산물 종류: (이름)\\n색상 상태: (0.0~10.0)\\n표면 상태: (0.0~10.0)\\n형태 유지: (0.0~10.0)\\n이상 징후: (0.0~10.0)\\n상태 설명: (관찰한 특징 포함 한 문장)'}
           ]
         }]
       })
@@ -1037,8 +1037,11 @@ async function analyzeCompare() {
     const raw = json.choices[0].message.content.replace(/\\*+/g,'').replace(/#+/g,'').trim();
     const sectionKeys = [
       {key:'농산물 종류', kws:['농산물','종류','채소','작물','식품']},
-      {key:'종합 신선도 점수', kws:['종합','신선도 점수']},
-      {key:'상태 설명', kws:['상태 설명','설명']},
+      {key:'색상 상태',   kws:['색상 상태','색상']},
+      {key:'표면 상태',   kws:['표면 상태','표면','외관','질감']},
+      {key:'형태 유지',   kws:['형태 유지','형태']},
+      {key:'이상 징후',   kws:['이상 징후','이상','징후']},
+      {key:'상태 설명',   kws:['상태 설명','설명']},
     ];
     const sections = {}; let curSec = null;
     for (const line of raw.split('\\n')) {
@@ -1052,16 +1055,26 @@ async function analyzeCompare() {
     const parseScore = r => { const m = (r||'').match(/([\\d.]+)/); return m ? parseFloat(m[1]).toFixed(1) : '5.0'; };
     const bProduce = sections['농산물 종류'] || '농산물';
     const bDesc    = sections['상태 설명'] || '';
-    let bs = parseFloat(parseScore(sections['종합 신선도 점수']));
+    let bcs = parseFloat(parseScore(sections['색상 상태']));
+    let bss = parseFloat(parseScore(sections['표면 상태']));
+    let bfs = parseFloat(parseScore(sections['형태 유지']));
+    let banoS = parseFloat(parseScore(sections['이상 징후']));
     const bNegWords = ['없','않','전혀','아닌','안 '];
     const bSents = bDesc.split(/[.!?\\n。]/);
     const bHasBad = (words) => bSents.some(sent =>
       words.some(w => sent.includes(w)) && !bNegWords.some(neg => sent.includes(neg))
     );
-    if (bHasBad(['곰팡이','악취'])) bs = Math.min(bs, 1.9);
-    else if (bHasBad(['부패','썩','검은 반점','검은반점','흑변'])) bs = Math.min(bs, 2.9);
-    else if (bHasBad(['물러','주름','변색','균열','상함','상해'])) bs = Math.min(bs, 4.9);
-    const bScore = bs;
+    if (bHasBad(['곰팡이','악취'])) {
+      bcs = Math.min(bcs, 2.0); bss = Math.min(bss, 2.0);
+      bfs = Math.min(bfs, 2.0); banoS = Math.min(banoS, 2.0);
+    } else if (bHasBad(['부패','썩','검은 반점','검은반점','흑변'])) {
+      bcs = Math.min(bcs, 3.0); bss = Math.min(bss, 3.0);
+      bfs = Math.min(bfs, 3.0); banoS = Math.min(banoS, 3.0);
+    } else if (bHasBad(['물러','주름','변색','균열','상함','상해'])) {
+      bcs = Math.min(bcs, 5.0); bss = Math.min(bss, 5.0);
+      bfs = Math.min(bfs, 5.0); banoS = Math.min(banoS, 5.0);
+    }
+    const bScore = bcs * 0.35 + bss * 0.30 + bfs * 0.25 + banoS * 0.10;
     const aProduce = lastResult.produce;
     if (!aProduce.includes(bProduce) && !bProduce.includes(aProduce)) {
       resultEl.innerHTML =

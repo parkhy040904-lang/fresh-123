@@ -844,6 +844,7 @@ async function analyze(src) {
         body: JSON.stringify({
           model: 'meta-llama/llama-4-scout-17b-16e-instruct',
           temperature: 0,
+          seed: 42,
           messages: [{
             role: 'user',
             content: [
@@ -1041,6 +1042,7 @@ async function analyzeCompare() {
       body: JSON.stringify({
         model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         temperature: 0,
+        seed: 42,
         messages: [{
           role: 'user',
           content: [
@@ -1760,7 +1762,7 @@ async function doRescan(src) {
       method: 'POST',
       headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct', temperature: 0,
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct', temperature: 0, seed: 42,
         messages: [{role:'user', content:[
           {type:'image_url', image_url:{url:'data:image/jpeg;base64,' + base64}},
           {type:'text', text:'사진 속 ' + entry.produce + '의 신선도를 엄격하게 채점하세요.\\n[채점 규칙]\\n• 곰팡이·악취 → 2점 이하\\n• 부패·변색·물러짐 → 4점 이하\\n• 완벽히 신선 → 8점 이상\\n• 점수는 소수점 첫째 자리까지\\n[출력 형식]\\n종합 신선도 점수: (0.0~10.0)\\n상태 설명: (한 문장)'}

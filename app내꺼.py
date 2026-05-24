@@ -577,6 +577,7 @@ body{background:#d9f0db;display:flex;justify-content:center;align-items:flex-sta
       <button class="hist-tabbtn active" id="htab0" onclick="switchHistTab(0)">📋 전체 기록</button>
       <button class="hist-tabbtn" id="htab1" onclick="switchHistTab(1)">⭐ 찜한 항목</button>
       <button class="hist-tabbtn" id="htab2" onclick="switchHistTab(2)">📊 비교 분석</button>
+      <button onclick="deleteAllHist()" style="border:none;background:#f0f0f0;color:#bbb;font-size:10px;font-weight:800;padding:0 10px;cursor:pointer;font-family:'Nunito',sans-serif;border-left:1px solid #ebebeb;flex-shrink:0;white-space:nowrap;">🗑️ 전체삭제</button>
     </div>
     <div class="scroll" id="histContent" style="padding:12px 14px 24px;"></div>
   </div>
@@ -1017,6 +1018,24 @@ async function analyzeCompare() {
   resultEl.innerHTML = '<div style="text-align:center;padding:16px;color:#aaa;font-size:13px;font-weight:700;">⏳ 분석 중...</div>';
   try {
     const base64 = imgToBase64(imgEl);
+    const chkRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        temperature: 0, max_tokens: 5,
+        messages: [{role:'user', content:[
+          {type:'image_url', image_url:{url:'data:image/jpeg;base64,'+base64}},
+          {type:'text', text:'이 사진이 실제 과일이나 채소의 실물 사진입니까?\\n이모지·그림·일러스트·만화·사람·동물·음식요리·사물·풍경·스크린샷 등은 NO입니다.\\nYES 또는 NO만 답하세요.'}
+        ]}]
+      })
+    });
+    if (!chkRes.ok) throw new Error('API 오류: ' + chkRes.status);
+    const chkJson = await chkRes.json();
+    if (!chkJson.choices[0].message.content.trim().toUpperCase().startsWith('YES')) {
+      resultEl.innerHTML = '<div style="background:#fff3e0;border-radius:14px;padding:14px 16px;text-align:center;"><div style="font-size:28px;margin-bottom:6px;">🚫</div><div style="font-size:13px;font-weight:800;color:#e65100;">과일이나 채소 사진을 올려주세요</div><div style="font-size:11px;color:#aaa;font-weight:600;margin-top:6px;">비교할 이미지도 실물 농산물 사진이어야 해요</div></div>';
+      return;
+    }
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {'Authorization': 'Bearer ' + GROQ_API_KEY, 'Content-Type': 'application/json'},
@@ -1091,6 +1110,21 @@ async function analyzeCompare() {
     const aWins    = aScore > bScore;
     const tie      = diff < 0.5;
     const summary  = tie ? '두 개의 신선도가 거의 비슷합니다.' : (aWins ? 'A가 ' + diff + '점 더 신선합니다. A를 선택하세요! 👈' : 'B가 ' + diff + '점 더 신선합니다. B를 선택하세요! 👉');
+    const itemDefs = [
+      {lbl:'🎨 색상', w:'35%', a:parseFloat(lastResult.colorScore),   b:bcs},
+      {lbl:'🔍 표면', w:'30%', a:parseFloat(lastResult.surfaceScore),  b:bss},
+      {lbl:'📐 형태', w:'25%', a:parseFloat(lastResult.shapeScore),    b:bfs},
+      {lbl:'⚠️ 이상', w:'10%', a:parseFloat(lastResult.anomalyScore),  b:banoS},
+    ];
+    const itemRows = itemDefs.map(it => {
+      const aW = it.a > it.b + 0.05; const bW = it.b > it.a + 0.05;
+      return '<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #f0f0f0;">' +
+        '<span style="font-size:11px;color:#666;font-weight:700;flex:1;">' + it.lbl + ' <span style="font-size:9px;color:#ccc;">' + it.w + '</span></span>' +
+        '<span style="font-size:13px;' + (aW ? 'font-weight:900;color:'+scoreColor(it.a.toFixed(1)) : 'color:#ccc;font-weight:700') + '">A ' + it.a.toFixed(1) + '</span>' +
+        '<span style="font-size:9px;color:#ddd;padding:0 1px;">vs</span>' +
+        '<span style="font-size:13px;' + (bW ? 'font-weight:900;color:'+scoreColor(it.b.toFixed(1)) : 'color:#ccc;font-weight:700') + '">B ' + it.b.toFixed(1) + '</span>' +
+      '</div>';
+    }).join('');
     resultEl.innerHTML =
       '<div class="cmp-grid">' +
         '<div class="cmp-card' + (aWins || tie ? ' winner' : '') + '">' +
@@ -1106,7 +1140,11 @@ async function analyzeCompare() {
           '<div class="cmp-score" style="color:' + scoreColor(bScore.toFixed(1)) + '">' + bScore.toFixed(1) + '</div>' +
         '</div>' +
       '</div>' +
-      '<div style="background:#f5f5f5;border-radius:12px;padding:10px 12px;margin-top:10px;font-size:12px;font-weight:700;color:#333;text-align:center;">' + summary + '</div>';
+      '<div style="background:#f5f5f5;border-radius:12px;padding:10px 12px;margin-top:10px;font-size:12px;font-weight:700;color:#333;text-align:center;">' + summary + '</div>' +
+      '<div style="background:#f9f9f9;border-radius:12px;padding:10px 12px;margin-top:8px;">' +
+        '<div style="font-size:10px;font-weight:800;color:#aaa;margin-bottom:6px;letter-spacing:0.03em;">항목별 비교</div>' +
+        itemRows +
+      '</div>';
     compareCachedHTML = resultEl.innerHTML;
     resultEl.scrollIntoView({behavior:'smooth', block:'nearest'});
   } catch(err) {
@@ -1620,6 +1658,12 @@ function renderCompareTab(content, hist) {
 
 function deleteHist(id) {
   saveHistory(loadHistory().filter(h => h.id !== id));
+  renderHistContent();
+}
+
+function deleteAllHist() {
+  if (!confirm('전체 기록을 모두 삭제할까요?')) return;
+  saveHistory([]);
   renderHistContent();
 }
 

@@ -1600,7 +1600,7 @@ function renderAllRecords(content, hist, isStarred) {
       '<button onclick="deleteHist('+h.id+')" style="background:none;border:none;color:#ccc;font-size:20px;cursor:pointer;flex-shrink:0;padding:2px 1px;line-height:1;">×</button>' +
     '</div>';
   }).join('');
-  content.innerHTML = '<div class="hsec-hdr"><span class="hsec-t">전체 분석 기록</span><span style="display:flex;align-items:center;gap:7px;"><span class="hsec-cnt">총 '+hist.length+'건</span><button onclick="deleteAllHist()" style="background:#f0f0f0;border:none;border-radius:7px;padding:4px 9px;font-size:10px;font-weight:800;color:#bbb;cursor:pointer;font-family:\'Nunito\',sans-serif;line-height:1.3;">🗑️ 전체삭제</button></span></div>' + items;
+  content.innerHTML = '<div class="hsec-hdr"><span class="hsec-t">전체 분석 기록</span><span style="display:flex;align-items:center;gap:7px;"><span class="hsec-cnt">총 '+hist.length+'건</span><button onclick="deleteAllHist()" style="background:#f0f0f0;border:none;border-radius:7px;padding:4px 9px;font-size:10px;font-weight:800;color:#bbb;cursor:pointer;font-family:Nunito,sans-serif;line-height:1.3;">🗑️ 전체삭제</button></span></div>' + items;
 }
 
 function toggleItemStar(id, el) {

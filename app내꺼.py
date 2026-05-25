@@ -723,90 +723,6 @@ function imgToBase64(imgEl) {
   return c.toDataURL('image/jpeg').split(',')[1];
 }
 
-const CROP_SCORE_RULES = {
-  watermelon: {
-    color:    [{ words: ['검은','흑변'], score:20 },{ words: ['갈변','변색'], score:60 },{ words: ['줄무늬 흐림','색 불균일'], score:75 }],
-    surface:  [{ words: ['곰팡이','솜털'], score:10 },{ words: ['균열','갈라짐','터짐'], score:40 },{ words: ['찍힘','눌림'], score:70 }],
-    moisture: [{ words: ['즙 샘','즙이 샘','흘러'], score:15 },{ words: ['물러','흐물'], score:50 }],
-    shape:    [{ words: ['심하게 무름','완전히 무름'], score:30 },{ words: ['약간 무름','살짝 무름'], score:80 },{ words: ['푸석','건조함'], score:65 }],
-    abnormal: [{ words: ['곰팡이','악취','벌레'], score:0 },{ words: ['검은 반점'], score:25 },{ words: ['없음','정상'], score:100 }],
-  },
-  apple: {
-    color:    [{ words: ['검은','흑변'], score:20 },{ words: ['갈변'], score:70 },{ words: ['변색','색 불균일'], score:75 },{ words: ['기름끼','왁스'], score:70 }],
-    surface:  [{ words: ['곰팡이','솜털'], score:10 },{ words: ['부패','썩'], score:15 },{ words: ['균열','갈라짐'], score:65 },{ words: ['찍힘','눌림','주름'], score:80 }],
-    moisture: [{ words: ['즙 샘','흘러'], score:20 },{ words: ['물러','흐물'], score:50 },{ words: ['푸석','분질'], score:55 }],
-    shape:    [{ words: ['심하게 무름'], score:30 },{ words: ['약간 무름','살짝 무름'], score:85 },{ words: ['기형'], score:75 }],
-    abnormal: [{ words: ['곰팡이','악취','벌레'], score:0 },{ words: ['검은 반점','흑반'], score:35 },{ words: ['싹'], score:60 },{ words: ['없음','정상'], score:100 }],
-  },
-  strawberry: {
-    color:    [{ words: ['검은','흑변'], score:10 },{ words: ['갈변','갈색'], score:30 },{ words: ['변색','색 불균일'], score:50 },{ words: ['착색 불균일','기형'], score:65 }],
-    surface:  [{ words: ['곰팡이','솜털','흰 가루'], score:0 },{ words: ['부패','썩'], score:10 },{ words: ['균열','터짐'], score:50 },{ words: ['찍힘','눌림'], score:70 }],
-    moisture: [{ words: ['즙 샘','흘러'], score:10 },{ words: ['물러','흐물'], score:40 }],
-    shape:    [{ words: ['심하게 무름'], score:20 },{ words: ['약간 무름'], score:70 },{ words: ['기형','역삼각형 아님'], score:65 },{ words: ['푸석'], score:55 }],
-    abnormal: [{ words: ['곰팡이','악취','벌레'], score:0 },{ words: ['검은 반점'], score:20 },{ words: ['없음','정상'], score:100 }],
-  },
-  cabbage: {
-    color:    [{ words: ['검은','흑변'], score:25 },{ words: ['갈변','갈색','변색'], score:60 },{ words: ['노랗게','누렇게'], score:55 },{ words: ['검은 반점'], score:50 }],
-    surface:  [{ words: ['곰팡이','솜털'], score:10 },{ words: ['부패','썩'], score:15 },{ words: ['찍힘','눌림'], score:80 }],
-    moisture: [{ words: ['시들','수분 손실'], score:45 },{ words: ['물러','흐물'], score:40 }],
-    shape:    [{ words: ['속 빔','결구 불량'], score:40 },{ words: ['심하게 무름'], score:30 },{ words: ['약간 무름'], score:80 },{ words: ['푸석'], score:60 }],
-    abnormal: [{ words: ['곰팡이','악취','벌레'], score:0 },{ words: ['검은 반점','흑반'], score:40 },{ words: ['없음','정상'], score:100 }],
-  },
-  onion: {
-    color:    [{ words: ['검은','흑변'], score:25 },{ words: ['갈변','변색'], score:65 },{ words: ['은회색','퇴색'], score:60 }],
-    surface:  [{ words: ['곰팡이','솜털'], score:10 },{ words: ['부패','썩'], score:15 },{ words: ['균열','갈라짐'], score:70 },{ words: ['찍힘','눌림'], score:85 }],
-    moisture: [{ words: ['싹','발아'], score:50 },{ words: ['물러','흐물'], score:45 },{ words: ['습기'], score:55 }],
-    shape:    [{ words: ['심하게 무름'], score:30 },{ words: ['약간 무름'], score:80 },{ words: ['푸석'], score:65 }],
-    abnormal: [{ words: ['곰팡이','악취','벌레'], score:0 },{ words: ['싹','발아'], score:55 },{ words: ['없음','정상'], score:100 }],
-  },
-  radish: {
-    color:    [{ words: ['검은','흑변'], score:20 },{ words: ['머리 검음','상단 변색'], score:40 },{ words: ['갈변','변색'], score:65 }],
-    surface:  [{ words: ['곰팡이','솜털'], score:10 },{ words: ['부패','썩'], score:15 },{ words: ['균열','갈라짐'], score:60 },{ words: ['잔뿌리 뒤틀림'], score:65 },{ words: ['찍힘','눌림'], score:80 }],
-    moisture: [{ words: ['즙 샘','흘러'], score:20 },{ words: ['물러','흐물'], score:45 },{ words: ['푸석','건조함'], score:55 }],
-    shape:    [{ words: ['심하게 무름'], score:30 },{ words: ['약간 무름'], score:80 },{ words: ['푸석'], score:60 },{ words: ['기형','갈라짐'], score:75 }],
-    abnormal: [{ words: ['곰팡이','악취','벌레'], score:0 },{ words: ['검은 반점','흑반'], score:30 },{ words: ['없음','정상'], score:100 }],
-  },
-};
-const WEIGHTS = { color:0.30, surface:0.25, moisture:0.20, shape:0.15, abnormal:0.10 };
-const CROP_ID_MAP = { '수박':'watermelon', '사과':'apple', '딸기':'strawberry', '배추':'cabbage', '양파':'onion', '무':'radish' };
-function getCropId(produce) {
-  for (const [kr, en] of Object.entries(CROP_ID_MAP)) {
-    if (produce.includes(kr)) return en;
-  }
-  return null;
-}
-const NEGATIONS_R = ['없','않','전혀','아닌','안'];
-function hasNegR(text, keyword) {
-  const idx = text.indexOf(keyword);
-  if (idx === -1) return false;
-  return NEGATIONS_R.some(n => text.slice(Math.max(0, idx - 10), idx).includes(n));
-}
-function getItemScore(text, rules) {
-  for (const rule of rules) {
-    for (const word of rule.words) {
-      if (text.includes(word) && !hasNegR(text, word)) return rule.score;
-    }
-  }
-  return 100;
-}
-function calcFreshnessScore(cropId, aiResult) {
-  const rules = CROP_SCORE_RULES[cropId];
-  if (!rules) return null;
-  const scores = {};
-  let total = 0;
-  for (const [cat, weight] of Object.entries(WEIGHTS)) {
-    const sc = getItemScore(aiResult[cat] ?? '', rules[cat] ?? []);
-    scores[cat] = sc;
-    total += sc * weight;
-  }
-  const fullText = Object.values(aiResult).join(' ');
-  const hasBadR = (words) => words.some(w => fullText.includes(w) && !hasNegR(fullText, w));
-  if (hasBadR(['곰팡이','악취']))                                                              total = Math.min(total, 19);
-  else if (hasBadR(['부패','검은 반점','흑변','기름끼','왁스']))                               total = Math.min(total, 29);
-  else if (hasBadR(['물러','주름','변색','균열','상함','시든 꼭지','기형','싹','푸석']))       total = Math.min(total, 49);
-  return { scores, total: Math.round(total) / 10 };
-}
-
 function scoreColor(s) {
   const n = parseFloat(s);
   return n >= 8 ? '#43a047' : n >= 6 ? '#7cb342' : n >= 4 ? '#fb8c00' : n >= 2 ? '#e64a19' : '#e53935';
@@ -827,7 +743,7 @@ function showLoading() {
   rbox.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-function showResult(produce, score, colorScore, surfaceScore, moistureScore, shapeScore, anomalyScore, cropId, status, desc, storage, shelf) {
+function showResult(produce, score, colorScore, surfaceScore, shapeScore, anomalyScore, status, desc, storage, shelf) {
   const scorePct = Math.min(parseFloat(score) * 10, 100);
   let tagCls, emoji, color, statusLabel;
   const s = parseFloat(score);
@@ -850,22 +766,12 @@ function showResult(produce, score, colorScore, surfaceScore, moistureScore, sha
   bar.style.background = 'linear-gradient(90deg,' + color + '88,' + color + ')';
   setTimeout(() => { bar.style.width = scorePct + '%'; }, 50);
   const _sg = document.getElementById('scoreGrid');
-  if (moistureScore !== null && moistureScore !== undefined) {
-    _sg.style.gridTemplateColumns = 'repeat(5,1fr)';
-    _sg.innerHTML =
-      '<div class="score-item"><div class="score-label">🎨 색상 <span class="score-weight">30%</span></div><div class="score-val" style="color:' + scoreColor(colorScore) + '">' + colorScore + '</div></div>' +
-      '<div class="score-item"><div class="score-label">🔍 표면 <span class="score-weight">25%</span></div><div class="score-val" style="color:' + scoreColor(surfaceScore) + '">' + surfaceScore + '</div></div>' +
-      '<div class="score-item"><div class="score-label">💧 수분 <span class="score-weight">20%</span></div><div class="score-val" style="color:' + scoreColor(moistureScore) + '">' + moistureScore + '</div></div>' +
-      '<div class="score-item"><div class="score-label">📐 형태 <span class="score-weight">15%</span></div><div class="score-val" style="color:' + scoreColor(shapeScore) + '">' + shapeScore + '</div></div>' +
-      '<div class="score-item"><div class="score-label">⚠️ 이상 <span class="score-weight">10%</span></div><div class="score-val" style="color:' + scoreColor(anomalyScore) + '">' + anomalyScore + '</div></div>';
-  } else {
-    _sg.style.gridTemplateColumns = 'repeat(4,1fr)';
-    _sg.innerHTML =
-      '<div class="score-item"><div class="score-label">🎨 색상 <span class="score-weight">35%</span></div><div class="score-val" style="color:' + scoreColor(colorScore) + '">' + colorScore + '</div></div>' +
-      '<div class="score-item"><div class="score-label">🔍 표면 <span class="score-weight">30%</span></div><div class="score-val" style="color:' + scoreColor(surfaceScore) + '">' + surfaceScore + '</div></div>' +
-      '<div class="score-item"><div class="score-label">📐 형태 <span class="score-weight">25%</span></div><div class="score-val" style="color:' + scoreColor(shapeScore) + '">' + shapeScore + '</div></div>' +
-      '<div class="score-item"><div class="score-label">⚠️ 이상 <span class="score-weight">10%</span></div><div class="score-val" style="color:' + scoreColor(anomalyScore) + '">' + anomalyScore + '</div></div>';
-  }
+  _sg.style.gridTemplateColumns = 'repeat(4,1fr)';
+  _sg.innerHTML =
+    '<div class="score-item"><div class="score-label">🎨 색상 <span class="score-weight">35%</span></div><div class="score-val" style="color:' + scoreColor(colorScore) + '">' + colorScore + '</div></div>' +
+    '<div class="score-item"><div class="score-label">🔍 표면 <span class="score-weight">30%</span></div><div class="score-val" style="color:' + scoreColor(surfaceScore) + '">' + surfaceScore + '</div></div>' +
+    '<div class="score-item"><div class="score-label">📐 형태 <span class="score-weight">25%</span></div><div class="score-val" style="color:' + scoreColor(shapeScore) + '">' + shapeScore + '</div></div>' +
+    '<div class="score-item"><div class="score-label">⚠️ 이상 <span class="score-weight">10%</span></div><div class="score-val" style="color:' + scoreColor(anomalyScore) + '">' + anomalyScore + '</div></div>';
   document.getElementById('rtags').innerHTML =
     '<span class="tag ' + tagCls + '">' + statusLabel + '</span>' +
     '<span class="tag" style="background:#f3f3f3;color:#666">AI 분석</span>' +
@@ -876,7 +782,7 @@ function showResult(produce, score, colorScore, surfaceScore, moistureScore, sha
     '⏰ <b>남은 기한:</b> ' + (shelf || '—');
   document.getElementById('btnRow').style.display = 'flex';
   shownRecipes = [];
-  lastResult = {produce, score, colorScore, surfaceScore, moistureScore, shapeScore, anomalyScore, cropId, desc};
+  lastResult = {produce, score, colorScore, surfaceScore, shapeScore, anomalyScore, desc};
   compareCachedHTML = null;
   if (compareStream) stopCompareCam(null);
   document.getElementById('cbox').style.display = 'none';
@@ -945,7 +851,7 @@ async function analyze(src) {
             role: 'user',
             content: [
               {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + base64}},
-              {type: 'text', text: '[신선도 분석 - 정확하게 관찰하고 채점하세요]\\n\\n[관찰 항목 - 이상 없으면 정상/없음으로 기재]\\n① 색상: 색깔·변색·탈색 특징\\n② 표면: 상처·주름·곰팡이·균열·반점 특징\\n③ 수분: 즙 샘·물러짐·건조함·시듦 특징\\n④ 형태: 처짐·무름·기형 특징\\n⑤ 이상: 악취·벌레·특수 부패 신호\\n\\n[채점 규칙 - 절대 준수]\\n• 곰팡이·악취가 보이면 → 해당 항목 2점 이하\\n• 광범위한 부패·검은 반점이 보이면 → 해당 항목 3점 이하\\n• 전체가 완벽히 신선할 때만 각 항목 8점 이상 가능\\n• 사진에 신선한 것과 상한 것이 섞이면 → 가장 상한 것 기준\\n\\n[출력 형식 - 이것만 출력, 다른 말 금지]\\n농산물 종류: (이름)\\n색상 관찰: (관찰 특징, 이상 없으면 정상)\\n표면 관찰: (관찰 특징, 이상 없으면 정상)\\n수분 관찰: (관찰 특징, 이상 없으면 정상)\\n형태 관찰: (관찰 특징, 이상 없으면 정상)\\n이상 관찰: (관찰 특징, 없으면 없음)\\n색상 상태: (0.0~10.0)\\n표면 상태: (0.0~10.0)\\n형태 유지: (0.0~10.0)\\n이상 징후: (0.0~10.0)\\n상태: (신선/보통/주의/부패 중 하나)\\n상태 설명: (관찰한 특징 포함해서 두 문장)\\n보관 방법: (구체적 온도·방법)\\n예상 남은 기한: (기간)'}
+              {type: 'text', text: '[신선도 분석 - 아래 순서로 진행하세요]\\n\\n먼저 농산물 종류를 파악하고, 해당 작물의 기준으로 채점하세요.\\n\\n[수박 기준]\\n색상: 호피무늬(녹색+검은줄) 선명도, 껍질 윤기, 껍질색(연한 연두색=양호)\\n표면: 껍질 탄력·상처·균열 여부\\n형태: 꼭지 싱싱하고 굵음=신선 / 꼭지 시들고 가늘음=노화\\n이상: 물러짐·즙 샘·냄새 흔적\\n\\n[사과 기준]\\n색상: 과피 색 균일·밝음, 기름끼·왁스 여부(과숙 신호), 꽃받침 착색\\n표면: 과피 탱탱함·상처·주름·균열 여부\\n형태: 꼭지 초록·싱싱=신선 / 꼭지 시들고 가늘음=노화\\n이상: 검은 반점·흑반·벌레\\n\\n[딸기 기준]\\n색상: 전체 선홍빛 균일 여부, 착색 불균일=불량\\n표면: 곰팡이·흰 가루·눌림·터짐 여부\\n형태: 역삼각형 정형=양호, 기형=불량, 꼭지 싱싱함\\n이상: 물러짐·즙 샘\\n\\n[배추 기준]\\n색상: 잎 노란색·갈변=노화, 잎자루 검은 반점=붕소 결핍\\n표면: 잎 시들음·상처·균열 여부\\n형태: 결구 완성도(속 빔=불량), 잎 처짐\\n이상: 곰팡이·악취·벌레\\n\\n[양파 기준]\\n색상: 은회색 퇴색=노화 신호, 외피 갈변\\n표면: 외피 건조=양호 / 습기·상처·병반=불량\\n형태: 싹 발아=노화, 물러짐\\n이상: 곰팡이·악취\\n\\n[무 기준]\\n색상: 표면 흰색·매끄럼=양호, 머리(상단) 검게 변함=노화\\n표면: 잔뿌리 뒤틀림=성장이상, 껍질 검은색·균열 여부\\n형태: 시든 잎·물러짐·기형\\n이상: 곰팡이·악취\\n\\n[기타 농산물 기준]\\n색상: 변색·탈색·얼룩 여부\\n표면: 상처·주름·곰팡이·균열·반점 여부\\n형태: 처짐·무름·기형 여부\\n이상: 악취 흔적·즙 흘림·특수 부패 신호\\n\\n[채점 규칙 - 절대 준수]\\n• 곰팡이·악취가 보이면 → 해당 항목 2점 이하\\n• 광범위한 부패·검은 반점이 보이면 → 해당 항목 3점 이하\\n• 전체가 완벽히 신선할 때만 각 항목 8점 이상 가능\\n• 사진에 신선한 것과 상한 것이 섞이면 → 가장 상한 것 기준\\n\\n[출력 형식 - 이것만 출력, 다른 말 금지]\\n농산물 종류: (이름)\\n색상 상태: (0.0~10.0)\\n표면 상태: (0.0~10.0)\\n형태 유지: (0.0~10.0)\\n이상 징후: (0.0~10.0)\\n상태: (신선/보통/주의/부패 중 하나)\\n상태 설명: (관찰한 특징 포함해서 두 문장)\\n보관 방법: (구체적 온도·방법)\\n예상 남은 기한: (기간)'}
             ]
           }]
         })
@@ -957,19 +863,14 @@ async function analyze(src) {
         .replace(/`+/g, '').replace(/_{2,}/g, '').replace(/\\\\[a-zA-Z]+/g, '')
         .trim();
       const sectionKeys = [
-        {key:'농산물 종류',    kws:['농산물','종류','채소','작물','식품']},
-        {key:'색상 관찰',      kws:['색상 관찰']},
-        {key:'표면 관찰',      kws:['표면 관찰']},
-        {key:'수분 관찰',      kws:['수분 관찰']},
-        {key:'형태 관찰',      kws:['형태 관찰']},
-        {key:'이상 관찰',      kws:['이상 관찰']},
-        {key:'색상 상태',      kws:['색상 상태','색상']},
-        {key:'표면 상태',      kws:['표면 상태','표면','외관','질감']},
-        {key:'형태 유지',      kws:['형태 유지']},
-        {key:'이상 징후',      kws:['이상 징후','징후']},
-        {key:'상태 설명',      kws:['상태 설명','설명']},
-        {key:'상태',           kws:['상태']},
-        {key:'보관 방법',      kws:['보관','저장']},
+        {key:'농산물 종류', kws:['농산물','종류','채소','작물','식품']},
+        {key:'색상 상태',   kws:['색상 상태','색상']},
+        {key:'표면 상태',   kws:['표면 상태','표면','외관','질감']},
+        {key:'형태 유지',   kws:['형태 유지','형태']},
+        {key:'이상 징후',   kws:['이상 징후','이상','징후']},
+        {key:'상태 설명',   kws:['상태 설명','설명']},
+        {key:'상태',        kws:['상태']},
+        {key:'보관 방법',   kws:['보관','저장']},
         {key:'예상 남은 기한', kws:['기한','유통','남은']},
       ];
       const sections = {}; let curSec = null;
@@ -987,56 +888,32 @@ async function analyze(src) {
       const desc    = sections['상태 설명'] || '';
       const storage = sections['보관 방법'] || '';
       const shelf   = sections['예상 남은 기한'] || '';
-      const cropId  = getCropId(produce);
-      let score, cs, ss, moistS, fs, anomS;
-      if (cropId) {
-        const aiObs = {
-          color:    sections['색상 관찰'] || '',
-          surface:  sections['표면 관찰'] || '',
-          moisture: sections['수분 관찰'] || '',
-          shape:    sections['형태 관찰'] || '',
-          abnormal: sections['이상 관찰'] || '',
-        };
-        const ruled = calcFreshnessScore(cropId, aiObs);
-        score  = ruled.total.toFixed(1);
-        cs     = (ruled.scores.color    / 10).toFixed(1);
-        ss     = (ruled.scores.surface  / 10).toFixed(1);
-        moistS = (ruled.scores.moisture / 10).toFixed(1);
-        fs     = (ruled.scores.shape    / 10).toFixed(1);
-        anomS  = (ruled.scores.abnormal / 10).toFixed(1);
-      } else {
-        let _cs = parseFloat(parseScore(sections['색상 상태']));
-        let _ss = parseFloat(parseScore(sections['표면 상태']));
-        let _fs = parseFloat(parseScore(sections['형태 유지']));
-        let _as = parseFloat(parseScore(sections['이상 징후']));
-        const combined = desc + ' ' + status;
-        const negWords = ['없','않','전혀','아닌','안 '];
-        const sentences = combined.split(/[.!?\\n。]/);
-        const hasBad = (words) => sentences.some(sent =>
-          words.some(w => sent.includes(w)) && !negWords.some(neg => sent.includes(neg))
-        );
-        if (hasBad(['곰팡이','악취'])) {
-          _cs = Math.min(_cs, 2.0); _ss = Math.min(_ss, 2.0); _fs = Math.min(_fs, 2.0); _as = Math.min(_as, 2.0);
-        } else if (hasBad(['부패','썩','검은 반점','검은반점','흑변']) || status === '부패') {
-          _cs = Math.min(_cs, 3.0); _ss = Math.min(_ss, 3.0); _fs = Math.min(_fs, 3.0); _as = Math.min(_as, 3.0);
-        } else if (status === '주의' || hasBad(['물러','주름','변색','균열','상함','상해'])) {
-          _cs = Math.min(_cs, 5.0); _ss = Math.min(_ss, 5.0); _fs = Math.min(_fs, 5.0); _as = Math.min(_as, 5.0);
-        }
-        const _s = _cs * 0.35 + _ss * 0.30 + _fs * 0.25 + _as * 0.10;
-        score  = _s.toFixed(1);
-        cs     = _cs.toFixed(1);
-        ss     = _ss.toFixed(1);
-        moistS = null;
-        fs     = _fs.toFixed(1);
-        anomS  = _as.toFixed(1);
+      let cs = parseFloat(parseScore(sections['색상 상태']));
+      let ss = parseFloat(parseScore(sections['표면 상태']));
+      let fs = parseFloat(parseScore(sections['형태 유지']));
+      let anomS = parseFloat(parseScore(sections['이상 징후']));
+      const combined = desc + ' ' + status;
+      const negWords  = ['없','않','전혀','아닌','안 '];
+      const sentences = combined.split(/[.!?\\n。]/);
+      const hasBad = (words) => sentences.some(sent =>
+        words.some(w => sent.includes(w)) && !negWords.some(neg => sent.includes(neg))
+      );
+      if (hasBad(['곰팡이','악취'])) {
+        cs = Math.min(cs, 2.0); ss = Math.min(ss, 2.0); fs = Math.min(fs, 2.0); anomS = Math.min(anomS, 2.0);
+      } else if (hasBad(['부패','썩','검은 반점','검은반점','흑변']) || status === '부패') {
+        cs = Math.min(cs, 3.0); ss = Math.min(ss, 3.0); fs = Math.min(fs, 3.0); anomS = Math.min(anomS, 3.0);
+      } else if (status === '주의' || hasBad(['물러','주름','변색','균열','상함','상해'])) {
+        cs = Math.min(cs, 5.0); ss = Math.min(ss, 5.0); fs = Math.min(fs, 5.0); anomS = Math.min(anomS, 5.0);
       }
+      const s = cs * 0.35 + ss * 0.30 + fs * 0.25 + anomS * 0.10;
+      const score = s.toFixed(1);
       const sNum = parseFloat(score);
       let shelfFinal;
       if (sNum < 2) shelfFinal = '즉시 버리세요 (섭취 불가)';
       else if (sNum < 4) shelfFinal = '오늘 안에 폐기하거나 상한 부분 완전히 제거 후 확인';
       else if (sNum < 6) shelfFinal = shelf || '오늘~내일 사용 권장';
       else shelfFinal = shelf;
-      showResult(produce, score, cs, ss, moistS, fs, anomS, cropId, status, desc, storage, shelfFinal);
+      showResult(produce, score, cs.toFixed(1), ss.toFixed(1), fs.toFixed(1), anomS.toFixed(1), status, desc, storage, shelfFinal);
       autoSaveEntry(src);
     } catch(err) {
       document.getElementById('remo').textContent = '❌';
@@ -1166,7 +1043,7 @@ async function analyzeCompare() {
           role: 'user',
           content: [
             {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + base64}},
-            {type: 'text', text: '[신선도 분석 - 관찰 후 채점하세요]\\n\\n[출력 형식 - 이것만 출력, 다른 말 금지]\\n농산물 종류: (이름)\\n색상 관찰: (관찰 특징, 이상 없으면 정상)\\n표면 관찰: (관찰 특징, 이상 없으면 정상)\\n수분 관찰: (관찰 특징, 이상 없으면 정상)\\n형태 관찰: (관찰 특징, 이상 없으면 정상)\\n이상 관찰: (관찰 특징, 없으면 없음)\\n색상 상태: (0.0~10.0)\\n표면 상태: (0.0~10.0)\\n형태 유지: (0.0~10.0)\\n이상 징후: (0.0~10.0)\\n상태 설명: (관찰한 특징 포함 한 문장)'}
+            {type: 'text', text: '[신선도 분석 - 아래 순서로 진행하세요]\\n\\n먼저 농산물 종류를 파악하고, 해당 작물의 기준으로 채점하세요.\\n\\n[수박 기준]\\n색상: 호피무늬(녹색+검은줄) 선명도, 껍질 윤기, 껍질색(연한 연두색=양호)\\n표면: 껍질 탄력·상처·균열 여부\\n형태: 꼭지 싱싱하고 굵음=신선 / 꼭지 시들고 가늘음=노화\\n이상: 물러짐·즙 샘·냄새 흔적\\n\\n[사과 기준]\\n색상: 과피 색 균일·밝음, 기름끼·왁스 여부(과숙 신호), 꽃받침 착색\\n표면: 과피 탱탱함·상처·주름·균열 여부\\n형태: 꼭지 초록·싱싱=신선 / 꼭지 시들고 가늘음=노화\\n이상: 검은 반점·흑반·벌레\\n\\n[딸기 기준]\\n색상: 전체 선홍빛 균일 여부, 착색 불균일=불량\\n표면: 곰팡이·흰 가루·눌림·터짐 여부\\n형태: 역삼각형 정형=양호, 기형=불량, 꼭지 싱싱함\\n이상: 물러짐·즙 샘\\n\\n[배추 기준]\\n색상: 잎 노란색·갈변=노화, 잎자루 검은 반점=붕소 결핍\\n표면: 잎 시들음·상처·균열 여부\\n형태: 결구 완성도(속 빔=불량), 잎 처짐\\n이상: 곰팡이·악취·벌레\\n\\n[양파 기준]\\n색상: 은회색 퇴색=노화 신호, 외피 갈변\\n표면: 외피 건조=양호 / 습기·상처·병반=불량\\n형태: 싹 발아=노화, 물러짐\\n이상: 곰팡이·악취\\n\\n[무 기준]\\n색상: 표면 흰색·매끄럼=양호, 머리(상단) 검게 변함=노화\\n표면: 잔뿌리 뒤틀림=성장이상, 껍질 검은색·균열 여부\\n형태: 시든 잎·물러짐·기형\\n이상: 곰팡이·악취\\n\\n[기타 농산물 기준]\\n색상: 변색·탈색·얼룩 여부\\n표면: 상처·주름·곰팡이·균열·반점 여부\\n형태: 처짐·무름·기형 여부\\n이상: 악취 흔적·즙 흘림·특수 부패 신호\\n\\n[채점 규칙 - 절대 준수]\\n• 곰팡이·악취가 보이면 → 해당 항목 2점 이하\\n• 광범위한 부패·검은 반점이 보이면 → 해당 항목 3점 이하\\n• 전체가 완벽히 신선할 때만 각 항목 8점 이상 가능\\n• 사진에 신선한 것과 상한 것이 섞이면 → 가장 상한 것 기준\\n\\n[출력 형식 - 이것만 출력, 다른 말 금지]\\n농산물 종류: (이름)\\n색상 상태: (0.0~10.0)\\n표면 상태: (0.0~10.0)\\n형태 유지: (0.0~10.0)\\n이상 징후: (0.0~10.0)\\n상태 설명: (관찰한 특징 포함 한 문장)'}
           ]
         }]
       })
@@ -1175,17 +1052,12 @@ async function analyzeCompare() {
     const json = await res.json();
     const raw = json.choices[0].message.content.replace(/\\*+/g,'').replace(/#+/g,'').trim();
     const sectionKeys = [
-      {key:'농산물 종류',    kws:['농산물','종류','채소','작물','식품']},
-      {key:'색상 관찰',      kws:['색상 관찰']},
-      {key:'표면 관찰',      kws:['표면 관찰']},
-      {key:'수분 관찰',      kws:['수분 관찰']},
-      {key:'형태 관찰',      kws:['형태 관찰']},
-      {key:'이상 관찰',      kws:['이상 관찰']},
-      {key:'색상 상태',      kws:['색상 상태','색상']},
-      {key:'표면 상태',      kws:['표면 상태','표면','외관','질감']},
-      {key:'형태 유지',      kws:['형태 유지']},
-      {key:'이상 징후',      kws:['이상 징후','징후']},
-      {key:'상태 설명',      kws:['상태 설명','설명']},
+      {key:'농산물 종류', kws:['농산물','종류','채소','작물','식품']},
+      {key:'색상 상태',   kws:['색상 상태','색상']},
+      {key:'표면 상태',   kws:['표면 상태','표면','외관','질감']},
+      {key:'형태 유지',   kws:['형태 유지','형태']},
+      {key:'이상 징후',   kws:['이상 징후','이상','징후']},
+      {key:'상태 설명',   kws:['상태 설명','설명']},
     ];
     const sections = {}; let curSec = null;
     for (const line of raw.split('\\n')) {
@@ -1199,42 +1071,22 @@ async function analyzeCompare() {
     const parseScore = r => { const m = (r||'').match(/([\\d.]+)/); return m ? parseFloat(m[1]).toFixed(1) : '5.0'; };
     const bProduce = sections['농산물 종류'] || '농산물';
     const bDesc    = sections['상태 설명'] || '';
-    const aCropId  = lastResult.cropId;
-    let bcs, bss, bmS, bfs, banoS, bScore;
-    if (aCropId) {
-      const bObs = {
-        color:    sections['색상 관찰'] || '',
-        surface:  sections['표면 관찰'] || '',
-        moisture: sections['수분 관찰'] || '',
-        shape:    sections['형태 관찰'] || '',
-        abnormal: sections['이상 관찰'] || '',
-      };
-      const bRuled = calcFreshnessScore(aCropId, bObs);
-      bcs   = bRuled.scores.color    / 10;
-      bss   = bRuled.scores.surface  / 10;
-      bmS   = bRuled.scores.moisture / 10;
-      bfs   = bRuled.scores.shape    / 10;
-      banoS = bRuled.scores.abnormal / 10;
-      bScore = bRuled.total;
-    } else {
-      bcs   = parseFloat(parseScore(sections['색상 상태']));
-      bss   = parseFloat(parseScore(sections['표면 상태']));
-      bmS   = null;
-      bfs   = parseFloat(parseScore(sections['형태 유지']));
-      banoS = parseFloat(parseScore(sections['이상 징후']));
-      const bSents = bDesc.split(/[.!?\\n。]/);
-      const bHasBad = (words) => bSents.some(sent =>
-        words.some(w => sent.includes(w)) && !['없','않','전혀','아닌','안 '].some(neg => sent.includes(neg))
-      );
-      if (bHasBad(['곰팡이','악취'])) {
-        bcs = Math.min(bcs, 2.0); bss = Math.min(bss, 2.0); bfs = Math.min(bfs, 2.0); banoS = Math.min(banoS, 2.0);
-      } else if (bHasBad(['부패','썩','검은 반점','검은반점','흑변'])) {
-        bcs = Math.min(bcs, 3.0); bss = Math.min(bss, 3.0); bfs = Math.min(bfs, 3.0); banoS = Math.min(banoS, 3.0);
-      } else if (bHasBad(['물러','주름','변색','균열','상함','상해'])) {
-        bcs = Math.min(bcs, 5.0); bss = Math.min(bss, 5.0); bfs = Math.min(bfs, 5.0); banoS = Math.min(banoS, 5.0);
-      }
-      bScore = bcs * 0.35 + bss * 0.30 + bfs * 0.25 + banoS * 0.10;
+    let bcs   = parseFloat(parseScore(sections['색상 상태']));
+    let bss   = parseFloat(parseScore(sections['표면 상태']));
+    let bfs   = parseFloat(parseScore(sections['형태 유지']));
+    let banoS = parseFloat(parseScore(sections['이상 징후']));
+    const bSents = bDesc.split(/[.!?\\n。]/);
+    const bHasBad = (words) => bSents.some(sent =>
+      words.some(w => sent.includes(w)) && !['없','않','전혀','아닌','안 '].some(neg => sent.includes(neg))
+    );
+    if (bHasBad(['곰팡이','악취'])) {
+      bcs = Math.min(bcs, 2.0); bss = Math.min(bss, 2.0); bfs = Math.min(bfs, 2.0); banoS = Math.min(banoS, 2.0);
+    } else if (bHasBad(['부패','썩','검은 반점','검은반점','흑변'])) {
+      bcs = Math.min(bcs, 3.0); bss = Math.min(bss, 3.0); bfs = Math.min(bfs, 3.0); banoS = Math.min(banoS, 3.0);
+    } else if (bHasBad(['물러','주름','변색','균열','상함','상해'])) {
+      bcs = Math.min(bcs, 5.0); bss = Math.min(bss, 5.0); bfs = Math.min(bfs, 5.0); banoS = Math.min(banoS, 5.0);
     }
+    const bScore = bcs * 0.35 + bss * 0.30 + bfs * 0.25 + banoS * 0.10;
     const aProduce = lastResult.produce;
     if (!aProduce.includes(bProduce) && !bProduce.includes(aProduce)) {
       resultEl.innerHTML =
@@ -1251,17 +1103,11 @@ async function analyzeCompare() {
     const aWins    = aScore > bScore;
     const tie      = diff < 0.5;
     const summary  = tie ? '두 개의 신선도가 거의 비슷합니다.' : (aWins ? 'A가 ' + diff + '점 더 신선합니다. A를 선택하세요! 👈' : 'B가 ' + diff + '점 더 신선합니다. B를 선택하세요! 👉');
-    const itemDefs = aCropId ? [
-      {lbl:'🎨 색상', w:'30%', a:parseFloat(lastResult.colorScore),    b:bcs},
-      {lbl:'🔍 표면', w:'25%', a:parseFloat(lastResult.surfaceScore),   b:bss},
-      {lbl:'💧 수분', w:'20%', a:parseFloat(lastResult.moistureScore),  b:bmS},
-      {lbl:'📐 형태', w:'15%', a:parseFloat(lastResult.shapeScore),     b:bfs},
-      {lbl:'⚠️ 이상', w:'10%', a:parseFloat(lastResult.anomalyScore),   b:banoS},
-    ] : [
-      {lbl:'🎨 색상', w:'35%', a:parseFloat(lastResult.colorScore),    b:bcs},
-      {lbl:'🔍 표면', w:'30%', a:parseFloat(lastResult.surfaceScore),   b:bss},
-      {lbl:'📐 형태', w:'25%', a:parseFloat(lastResult.shapeScore),     b:bfs},
-      {lbl:'⚠️ 이상', w:'10%', a:parseFloat(lastResult.anomalyScore),   b:banoS},
+    const itemDefs = [
+      {lbl:'🎨 색상', w:'35%', a:parseFloat(lastResult.colorScore),   b:bcs},
+      {lbl:'🔍 표면', w:'30%', a:parseFloat(lastResult.surfaceScore),  b:bss},
+      {lbl:'📐 형태', w:'25%', a:parseFloat(lastResult.shapeScore),    b:bfs},
+      {lbl:'⚠️ 이상', w:'10%', a:parseFloat(lastResult.anomalyScore),  b:banoS},
     ];
     const itemRows = itemDefs.map(it => {
       const aW = it.a > it.b + 0.05; const bW = it.b > it.a + 0.05;
